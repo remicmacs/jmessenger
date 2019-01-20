@@ -1,0 +1,13 @@
+<?import jfxmessenger.ContactData?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+
+<?import javafx.scene.image.ImageView?>
+<HBox xmlns:fx="http://javafx.com/fxml" fx:id="hBox">
+    <children>
+        <ImageView  fx:id="contactAvatar"/>
+        <Label  fx:id="contactUsername"/>
+        <ImageView fx:id="contactStatus"/>
+    </children>
+</HBox>
+

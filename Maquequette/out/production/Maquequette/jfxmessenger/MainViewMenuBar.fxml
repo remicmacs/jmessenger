@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuItem?>
+<?import jfxmessenger.MainViewMenuBar?>
+
+<MainViewMenuBar xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="jfxmessenger.MainViewMenuBarController" fx:id="root">
+    <menus>
+        <Menu fx:id="mainMenuFileMenu" mnemonicParsing="false" text="File">
+            <items>
+                <MenuItem fx:id="mainMenuItemFileMenuClose" mnemonicParsing="false" onAction="#onClick" text="Close" />
+            </items>
+        </Menu>
+        <Menu fx:id="mainMenuEditMenu" mnemonicParsing="false" text="Edit">
+            <items>
+                <MenuItem mnemonicParsing="false" text="Delete" />
+            </items>
+        </Menu>
+        <Menu fx:id="mainMenuHelpMenu" mnemonicParsing="false" text="Help">
+            <items>
+                <MenuItem mnemonicParsing="false" text="About" />
+            </items>
+        </Menu>
+    </menus>
+</MainViewMenuBar>

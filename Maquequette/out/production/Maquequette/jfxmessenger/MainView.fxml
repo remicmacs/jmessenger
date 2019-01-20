@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.BorderPane?>
+
+
+<?import jfxmessenger.MainViewMenuBar?>
+
+<BorderPane fx:controller="jfxmessenger.MainViewController" fx:id="mainViewBorderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1">
+   <top>
+       <fx:include source="MainViewMenuBar.fxml" fx:id="mainViewMenuBar" />
+   </top>
+    <left>
+        <fx:include source="SidePane.fxml" fx:id="sidePaneAccordion"/>
+    </left>
+</BorderPane>
