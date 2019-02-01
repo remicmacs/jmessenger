@@ -20,17 +20,31 @@
 * How do we manage demotion ?
 * Who is admin when admin leaves ?
 * What is leaving a room ?
+* Status:
+  * Available (green)
+  * Busy (red)
+  * Away (yellow)
+  * Custom : inheriting main characteristics of three main status and composing around them with a custom label, fine-tuning notifications rules, etc.
 
 ## Client
-* List of channel user is part of.
+
+* Search bar (contacts **and** channels at the same time)
+* List of channels user is part of.
 * List of DM conversations that are currently opened.
+* Elements with unread messages is in **bold**.
+* Unread messages : stored client-side or server-side ? Timestamp for last date of last read message or UUID of last read message ?
+* Main center panel : active conversation.
+* List of users in the active conversation.
 * Searching list of available channels and contacts is invoqued only when needed and not the default interface. And it is the **same** interface.
-* Recherche de contact et de rooms
-* What is stored client-side ?
 * List of connected users in channel (status)
+* Conditionnal display given user rights.
 * Usage statistics display (only a line graph and best contributor maybe ?)
+* Hover interface elements for feedback : plus button to add channel/dms, expand list of users, changing status, etc.
+* What is stored client-side ?
+* Update main interface coroutine : asynchronous or blocking ?
 
 ## Concepts
+
 * Conversation
 * Channel
 * Connections
@@ -41,4 +55,3 @@
 * Communication protocol
   * Messaging protocol
   * Must be full text for easier debugging
-
