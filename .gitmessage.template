@@ -1,0 +1,22 @@
+A meaningful title
+
+Phat description.
+
+- Thingy #1
+- Thingy #2
+
+Why:
+
+- Because this
+- And that
+
+# Title 50 char, no period
+# Blank line
+# Longer description with wrapped lines at 72 char.
+# Blank line
+# Reasons : problems taken care of with this commit. Arguments for
+# breaking changes, etc.
+# Focus on what and why. The code and docs explain how already.
+#
+# Justification : https://chris.beams.io/posts/git-commit/
+# ^ Compilation of many guidelines, including from Git.
