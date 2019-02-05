@@ -1,0 +1,10 @@
+# IDEA shit
+*.iml
+*.idea
+*workspace.xml
+
+# Ignoring class files
+*.class
+
+# JEnv noise
+*.java-version
