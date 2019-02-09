@@ -6,7 +6,18 @@
 # Ignoring class files
 *.class
 
+# Ignoring build packages
+*.jar
+
 # Build artifacts
 */target/
 # JEnv noise
 *.java-version
+
+# Gradle things
+*.gradle
+*/build/
+
+# Avoid ignoring Gradle wrapper, because it's important or sometin'
+!*gradle-wrapper.jar
+!*gradle-wrapper.properties
