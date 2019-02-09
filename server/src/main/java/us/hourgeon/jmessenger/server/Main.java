@@ -1,3 +1,4 @@
+package us.hourgeon.jmessenger.server;
 import java.sql.*;
 
 public class Main {

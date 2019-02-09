@@ -1,10 +1,12 @@
 # IDEA shit
 *.iml
-*.idea
+*.idea/
 *workspace.xml
 
 # Ignoring class files
 *.class
 
+# Build artifacts
+*/target/
 # JEnv noise
 *.java-version
