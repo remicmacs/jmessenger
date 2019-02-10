@@ -6,7 +6,13 @@
   * Thread pools & tasks to execute.
   * Each client connection create tasks and submits it to the tasks queue.
   * What state of the application has to be thread-safe ?
-  * What data has race conditions
+  * What data has race conditions ?
+  * `CopyOnWriteArrayList` is said to be the best solution for observers lists.
+* `ScheduledThreadPoolExecutor`: for tasks needing to be run periodically.
+* `CachedThreadPoolExecutor`: for a light server, needs little configuration and
+  takes generally the correct decisions.
+* Write only `Runnable` and `Callable` objects as **tasks** to execute, and give
+  them to the PoolExecutors.
 * Client identification => UUID associated to an account.
 * State of the channel as a history.
 * Channel: generic conversation between >= 2 people.
@@ -15,7 +21,9 @@
 * **Private channels** are access-controlled channels.
   * Access control is done by the **admin**
   * Admin cannot leave (?) this channel as he has to manage it.
-* Distinction group messaging / private channel (please no).
+* Distinction group messaging / private channel:
+  * Group messaging : direct messaging ensures everyone receive the message
+  * Private channel : only the subscribed users receive the messages
 * Admin can promote non-admins to admin position.
 * How do we manage demotion ?
 * Who is admin when admin leaves ?
