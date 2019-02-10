@@ -3,7 +3,7 @@ package us.hourgeon.jmessenger.server.Model;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 
-final class Message implements Serializable {
+final class Message implements Serializable, Comparable<Message> {
     /**
      * User sending the message
      */
@@ -25,7 +25,7 @@ final class Message implements Serializable {
     private final ZonedDateTime timestamp;
 
     /**
-     * Constuctor
+     * Constructor
      *
      * All properties are final when the message is emitted
      * @param author {@link Message#author}
@@ -85,5 +85,10 @@ final class Message implements Serializable {
      */
     public ZonedDateTime getTimestamp() {
         return this.timestamp;
+    }
+
+    @Override
+    public int compareTo(Message message) {
+        return 0;
     }
 }

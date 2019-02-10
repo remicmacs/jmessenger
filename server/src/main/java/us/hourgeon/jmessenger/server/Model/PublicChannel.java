@@ -1,43 +1,30 @@
 package us.hourgeon.jmessenger.server.Model;
 
-import javafx.beans.InvalidationListener;
-
+import java.util.Collection;
+import java.util.SortedSet;
 import java.util.UUID;
-import java.util.Vector;
 
-class PublicChannel implements Channel {
-    @Override
-    public UUID getChannelId() {
-        return null;
+class PublicChannel extends AbstractChannel {
+    /**
+     * Constructor
+     *  @param uuid               {@link PublicChannel#uuid}
+     * @param initialSubscribers {@link PublicChannel#subscribers}
+     * @param history            {@link PublicChannel#history}
+     */
+    PublicChannel(
+            UUID uuid, Collection<User> initialSubscribers,
+            SortedSet<Message> history
+    ) {
+        super(uuid, initialSubscribers, history);
     }
 
     @Override
     public Channel getCopy() {
-        return null;
-    }
-
-    @Override
-    public ChannelHistory getHistory() {
-        return null;
-    }
-
-    @Override
-    public Vector<User> getRegisteredUsers() {
-        return null;
-    }
-
-    @Override
-    public Vector<User> getAllUsers() {
-        return null;
-    }
-
-    @Override
-    public void addListener(InvalidationListener invalidationListener) {
-
-    }
-
-    @Override
-    public void removeListener(InvalidationListener invalidationListener) {
-
+        // No need to send copy of COW set because it is instantiated in
+        // constructor anyway.
+        return new PublicChannel(
+                this.getChannelId(),
+                this.getSubscribers(),
+                this.getHistory().getMessages());
     }
 }

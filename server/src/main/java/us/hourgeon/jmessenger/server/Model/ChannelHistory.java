@@ -2,14 +2,15 @@ package us.hourgeon.jmessenger.server.Model;
 
 import java.io.Serializable;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Vector;
+import java.util.SortedSet;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 final class ChannelHistory implements Serializable {
     /**
-     * The Channel the history is of
+     * The UUID of the Channel which activity is recorded in this history
      */
-    private final Channel channel;
+    private final UUID channelUUID;
 
     /**
      * The Message objects ordered list
@@ -19,7 +20,7 @@ final class ChannelHistory implements Serializable {
      *
      * The Vector class is used for thread safety.
      */
-    private final Vector<Message> messages;
+    private final ConcurrentSkipListSet<Message> messages;
 
     /**
      * Timestamp of the instant the history was generated.
@@ -38,12 +39,12 @@ final class ChannelHistory implements Serializable {
      * No reference on original mutable object is saved. Messages are
      * immutable so they are just saved in a Vector.
      *
-     * @param channel {@link ChannelHistory#channel}
+     * @param channelUUID {@link ChannelHistory#channelUUID}
      * @param messages {@link ChannelHistory#messages}
      */
-    ChannelHistory(Channel channel, List<Message> messages) {
-        this.channel = channel.getCopy();
-        this.messages = new Vector<>(messages);
+    ChannelHistory(UUID channelUUID, SortedSet<Message> messages) {
+        this.channelUUID = channelUUID;
+        this.messages = new ConcurrentSkipListSet<>(messages);
         this.timestamp = ZonedDateTime.now();
     }
 
@@ -51,18 +52,8 @@ final class ChannelHistory implements Serializable {
      * Get messages included in the history
      * @return {@link ChannelHistory#messages}
      */
-    Vector<Message> getMessages() {
+    SortedSet<Message> getMessages() {
         return this.messages;
-    }
-
-    /**
-     * Get a copy of the Channel object
-     *
-     * TODO: It might not be useful to make a defensive copy of the channel.
-     * @return {@link ChannelHistory#channel}
-     */
-    Channel getChannel() {
-        return this.channel.getCopy();
     }
 
     /**
