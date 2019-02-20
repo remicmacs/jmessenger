@@ -21,3 +21,6 @@
 # Avoid ignoring Gradle wrapper, because it's important or sometin'
 !*gradle-wrapper.jar
 !*gradle-wrapper.properties
+
+# Java out
+*/out/
