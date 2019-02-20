@@ -1,6 +1,9 @@
 package us.hourgeon.jmessenger.server;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.SelectionKey;
@@ -13,24 +16,64 @@ import java.sql.*;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.java_websocket.WebSocket;
+import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.WebSocketServer;
+
 public class Main {
-    public static void main(String[] args) throws SQLException, IOException {
-        System.out.println("Hello, world");
-        /* JDBC Connection try
-        try (Connection conn = DriverManager.getConnection("jdbc:mariadb" +
-                "://localhost/", "root", "root")) {
-            // create a Statement
-            try (Statement stmt = conn.createStatement()) {
-                //execute query
-                try (ResultSet rs = stmt.executeQuery("SELECT 'Hello World!'")) {
-                    //position result to first
-                    rs.first();
-                    System.out.println(rs.getString(1)); //result is "Hello World!"
-                }
+    static class ChatServer extends WebSocketServer {
+
+        public ChatServer( int port ) throws UnknownHostException {
+            super( new InetSocketAddress( port ) );
+        }
+
+        public ChatServer( InetSocketAddress address ) {
+            super( address );
+        }
+
+
+        @Override
+        public void onOpen(WebSocket conn, ClientHandshake handshake) {
+            conn.send("Welcome to the server!"); //This method sends a message to the new client
+            broadcast( "new connection: " + handshake.getResourceDescriptor() ); //This method sends a message to all clients connected
+            System.out.println( conn.getRemoteSocketAddress().getAddress().getHostAddress() + " entered the room!" );
+
+        }
+
+        @Override
+        public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+
+            broadcast( conn + " has left the room!" );
+            System.out.println( conn + " has left the room!" );
+
+        }
+
+        @Override
+        public void onMessage(WebSocket conn, String message) {
+            broadcast( message );
+            System.out.println( conn + ": " + message );
+
+        }
+
+        @Override
+        public void onError(WebSocket conn, Exception ex) {
+            ex.printStackTrace();
+            if( conn != null ) {
+                // some errors like port binding failed may not be assignable to a specific websocket
             }
         }
-        */
 
+        @Override
+        public void onStart() {
+            System.out.println("Server started!");
+            setConnectionLostTimeout(0);
+            setConnectionLostTimeout(100);
+        }
+    };
+    public static void main(String[] args) throws SQLException, IOException, InterruptedException {
+        System.out.println("Server booting...");
+
+        /* Server with Sockets and Selector of channels
         // Create the server socket channel
         ServerSocketChannel server = ServerSocketChannel.open();
         // nonblocking I/O
@@ -89,6 +132,30 @@ public class Main {
                     }
                 }
             }
+        }*/
+
+        int port = 8887; // 843 flash policy port
+        try {
+            port = Integer.parseInt( args[ 0 ] );
+        } catch ( Exception ex ) {
         }
+        ChatServer s = new ChatServer( port );
+        s.start();
+        System.out.println( "ChatServer started on port: " + s.getPort() );
+
+        BufferedReader sysin = new BufferedReader( new InputStreamReader( System.in ) );
+        while ( true ) {
+            String in = sysin.readLine();
+            s.broadcast( in );
+            if( in.equals( "exit" ) ) {
+                s.stop(1000);
+                break;
+            }
+        }
+
+
+        System.out.println("Server stopping...");
+
+
     }
 }
