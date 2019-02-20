@@ -15,7 +15,7 @@
 *.java-version
 
 # Gradle things
-*.gradle
+*.gradle/
 */build/
 
 # Avoid ignoring Gradle wrapper, because it's important or sometin'
