@@ -6,9 +6,16 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
+<VBox xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="Controller"
-            prefHeight="400.0" prefWidth="600.0">
+            prefHeight="400.0" prefWidth="600.0" alignment="CENTER" spacing="10" minWidth="-Infinity" maxWidth="Infinity" minHeight="-Infinity" maxHeight="Infinity">
 
-</AnchorPane>
+    <HBox alignment="CENTER" spacing="10">
+        <Label>Server</Label>
+        <TextField fx:id="serverAddress"></TextField>
+    </HBox>
+
+    <Button fx:id="connectButton">Connect</Button>
+
+</VBox>

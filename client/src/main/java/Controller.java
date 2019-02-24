@@ -1,3 +1,7 @@
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+
 import javax.websocket.ContainerProvider;
 import javax.websocket.DeploymentException;
 import javax.websocket.WebSocketContainer;
@@ -7,15 +11,30 @@ import java.net.URISyntaxException;
 
 public class Controller {
 
-    public Controller() {
-        WebSocketController c = null; // more about drafts here: http://github.com/TooTallNate/Java-WebSocket/wiki/Drafts
+    @FXML
+    private TextField serverAddress;
+
+    @FXML
+    private Button connectButton;
+
+    private WebSocketController controller;
+
+    public void initialize() {
+        connectButton.setOnMouseClicked(mouseEvent -> connect());
+    }
+
+    private void connect() {
         try {
-            c = new WebSocketController(new URI( "ws://192.168.1.23:8888" ));
+            controller = new WebSocketController(new URI(serverAddress.getText()));
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-        if (c != null) {
-            c.connect();
+        if (controller != null) {
+            controller.connect();
         }
+    }
+
+    public void close() {
+        controller.closeConnection(1000, "Quitting application");
     }
 }
