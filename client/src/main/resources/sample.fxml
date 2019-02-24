@@ -13,9 +13,14 @@
 
     <HBox alignment="CENTER" spacing="10">
         <Label>Server</Label>
-        <TextField fx:id="serverAddress"></TextField>
+        <TextField fx:id="serverAddress" promptText="ws://demos.kaazing.com/echo"></TextField>
     </HBox>
 
     <ToggleButton fx:id="connectButton">Connect</ToggleButton>
+
+    <HBox fx:id="messageBar" alignment="BOTTOM_CENTER" spacing="10">
+        <TextField fx:id="messageField"></TextField>
+        <Button fx:id="sendButton">Send</Button>
+    </HBox>
 
 </VBox>

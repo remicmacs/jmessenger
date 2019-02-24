@@ -2,6 +2,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
 import org.java_websocket.handshake.ServerHandshake;
 
 import javax.websocket.ContainerProvider;
@@ -19,6 +21,15 @@ public class Controller implements WebSocketEvents {
     @FXML
     private ToggleButton connectButton;
 
+    @FXML
+    private TextField messageField;
+
+    @FXML
+    private HBox messageBar;
+
+    @FXML
+    private Button sendButton;
+
     private WebSocketController controller;
 
     public void initialize() {
@@ -30,11 +41,22 @@ public class Controller implements WebSocketEvents {
                 disconnect();
             }
         });
+
+        messageBar.setVisible(false);
+        messageField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                send();
+            }
+        });
+        sendButton.setOnAction(value -> {
+            send();
+        });
     }
 
     private void connect() {
+        String address = serverAddress.getText().isEmpty() ? serverAddress.getPromptText() : serverAddress.getText();
         try {
-            controller = new WebSocketController(new URI(serverAddress.getText()));
+            controller = new WebSocketController(new URI(address));
             controller.registerWebSocketEvents(this);
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -58,6 +80,21 @@ public class Controller implements WebSocketEvents {
 
     @Override
     public void onOpen(ServerHandshake handshakedata) {
-        System.out.println("Connected !!");
+        System.out.println("Connected");
+        messageBar.setVisible(true);
+    }
+
+    @Override
+    public void onClose(int code, String reason, boolean remote) {
+        System.out.println("Disconnected");
+        messageBar.setVisible(false);
+    }
+
+    public void send() {
+        String message = messageField.getText();
+        messageField.clear();
+        if (controller != null && !message.isEmpty()) {
+            controller.send(message);
+        }
     }
 }
