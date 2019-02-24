@@ -1,6 +1,8 @@
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import org.java_websocket.handshake.ServerHandshake;
 
 import javax.websocket.ContainerProvider;
 import javax.websocket.DeploymentException;
@@ -9,23 +11,31 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class Controller {
+public class Controller implements WebSocketEvents {
 
     @FXML
     private TextField serverAddress;
 
     @FXML
-    private Button connectButton;
+    private ToggleButton connectButton;
 
     private WebSocketController controller;
 
     public void initialize() {
-        connectButton.setOnMouseClicked(mouseEvent -> connect());
+        connectButton.setOnAction(event -> {
+            boolean isSelected = ((ToggleButton)event.getSource()).isSelected();
+            if (isSelected) {
+                connect();
+            } else {
+                disconnect();
+            }
+        });
     }
 
     private void connect() {
         try {
             controller = new WebSocketController(new URI(serverAddress.getText()));
+            controller.registerWebSocketEvents(this);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -34,7 +44,20 @@ public class Controller {
         }
     }
 
+    private void disconnect() {
+        if (controller != null) {
+            controller.close(1000, "User closed the connection");
+        }
+    }
+
     public void close() {
-        controller.closeConnection(1000, "Quitting application");
+        if (controller != null) {
+            controller.close(1000, "Quitting application");
+        }
+    }
+
+    @Override
+    public void onOpen(ServerHandshake handshakedata) {
+        System.out.println("Connected !!");
     }
 }

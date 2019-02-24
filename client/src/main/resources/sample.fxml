@@ -16,6 +16,6 @@
         <TextField fx:id="serverAddress"></TextField>
     </HBox>
 
-    <Button fx:id="connectButton">Connect</Button>
+    <ToggleButton fx:id="connectButton">Connect</ToggleButton>
 
 </VBox>

@@ -36,6 +36,8 @@ import org.java_websocket.handshake.ServerHandshake;
 /** This example demonstrates how to create a websocket connection to a server. Only the most important callbacks are overloaded. */
 public class WebSocketController extends WebSocketClient {
 
+    private WebSocketEvents events;
+
     public WebSocketController(URI serverUri, Draft draft) {
         super(serverUri, draft);
     }
@@ -53,6 +55,9 @@ public class WebSocketController extends WebSocketClient {
         send("Hello, it is me. Mario :)");
         System.out.println("opened connection");
 
+        if (events != null) {
+            events.onOpen(handshakedata);
+        }
     }
 
     @Override
@@ -70,6 +75,10 @@ public class WebSocketController extends WebSocketClient {
     public void onError(Exception ex) {
         ex.printStackTrace();
         // if the error is fatal then onClose will be called additionally
+    }
+
+    public void registerWebSocketEvents(WebSocketEvents events) {
+        this.events = events;
     }
 
 }
