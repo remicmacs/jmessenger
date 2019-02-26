@@ -18,9 +18,4 @@
 
     <ToggleButton fx:id="connectButton">Connect</ToggleButton>
 
-    <HBox fx:id="messageBar" alignment="BOTTOM_CENTER" spacing="10">
-        <TextField fx:id="messageField"></TextField>
-        <Button fx:id="sendButton">Send</Button>
-    </HBox>
-
 </VBox>

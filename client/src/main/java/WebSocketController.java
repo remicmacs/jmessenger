@@ -23,51 +23,40 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Map;
-
+import javafx.application.Platform;
 import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.drafts.Draft;
-import org.java_websocket.drafts.Draft_6455;
-import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ServerHandshake;
 
-/** This example demonstrates how to create a websocket connection to a server. Only the most important callbacks are overloaded. */
+import java.net.URI;
+
 public class WebSocketController extends WebSocketClient {
 
     private WebSocketEvents events;
+    private MessageEvents messageEvents;
 
-    public WebSocketController(URI serverUri, Draft draft) {
-        super(serverUri, draft);
-    }
-
-    public WebSocketController(URI serverURI) {
+    WebSocketController(URI serverURI) {
         super(serverURI);
-    }
-
-    public WebSocketController(URI serverUri, Map<String, String> httpHeaders) {
-        super(serverUri, httpHeaders);
     }
 
     @Override
     public void onOpen(ServerHandshake handshakedata) {
-        send("Hello, it is me. Mario :)");
-        System.out.println("opened connection");
-
         if (events != null) {
-            events.onOpen(handshakedata);
+            Platform.runLater(() -> events.onOpen(handshakedata, this));
         }
     }
 
     @Override
     public void onMessage(String message) {
-        System.out.println("received: " + message);
+        if (messageEvents != null) {
+            // Platform.runLater() will ensure that the callback will be called during the JavaFX thread
+            // It has to run in the JavaFX thread because it can change elements in UI
+            Platform.runLater(() -> messageEvents.onMessage(message));
+        }
     }
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        // The codecodes are documented in class org.java_websocket.framing.CloseFrame
+        // The codes are documented in class org.java_websocket.framing.CloseFrame
         System.out.println("Connection closed by " + (remote ? "remote peer" : "us") + " Code: " + code + " Reason: " + reason);
         if (events != null) {
             events.onClose(code, reason, remote);
@@ -80,8 +69,11 @@ public class WebSocketController extends WebSocketClient {
         // if the error is fatal then onClose will be called additionally
     }
 
-    public void registerWebSocketEvents(WebSocketEvents events) {
+    void registerWebSocketEvents(WebSocketEvents events) {
         this.events = events;
     }
 
+    void registerMessageEvents(MessageEvents messageEvents) {
+        this.messageEvents = messageEvents;
+    }
 }
