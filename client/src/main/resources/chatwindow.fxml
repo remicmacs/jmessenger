@@ -1,27 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <?import javafx.collections.FXCollections?>
 
-<GridPane xmlns="http://javafx.com/javafx"
+<SplitPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
           fx:controller="ChatWindow"
-          prefHeight="Infinity" prefWidth="Infinity">
+          prefHeight="Infinity" prefWidth="Infinity" dividerPositions="0.2, 0.8">
 
 
-    <VBox GridPane.rowIndex="0"
-          GridPane.columnIndex="0"
-          GridPane.rowSpan="3"
-          GridPane.columnSpan="1"
+    <VBox fx:id="leftPanel"
           spacing="10"
           alignment="TOP_CENTER"
-          prefWidth="300"
-          GridPane.vgrow="ALWAYS">
+          prefWidth="300">
 
         <Label>Username</Label>
         <ComboBox promptText="Status">
@@ -34,11 +28,10 @@
             </items>
         </ComboBox>
 
-        <ScrollPane
-            VBox.vgrow="ALWAYS">
+        <ScrollPane VBox.vgrow="ALWAYS"
+                    hbarPolicy="NEVER">
 
-            <VBox
-                prefWidth="300">
+            <VBox prefWidth="${leftPanel.width}">
                 <TitledPane text="Conversations">
                     <ListView fx:id="conversationsList"></ListView>
                 </TitledPane>
@@ -51,44 +44,29 @@
         </ScrollPane>
     </VBox>
 
+    <VBox spacing="10">
+        <VBox VBox.vgrow="ALWAYS">
 
-    <VBox GridPane.rowIndex="0"
-            GridPane.columnIndex="1"
-            GridPane.rowSpan="2"
-            GridPane.columnSpan="2"
-            GridPane.hgrow="ALWAYS"
-            GridPane.vgrow="ALWAYS"
-            prefHeight="Infinity"
-            prefWidth="Infinity">
+            <Label>Room something</Label>
 
-        <Label>Room something</Label>
+            <ListView fx:id="messagesList"
+                      VBox.vgrow="ALWAYS">
+            </ListView>
 
-        <ListView fx:id="messagesList"
-                  VBox.vgrow="ALWAYS">
-        </ListView>
+        </VBox>
 
+        <HBox fx:id="chatEntry"
+              prefHeight="64"
+              maxHeight="64">
+
+            <TextField fx:id="chatEntryField" prefHeight="64" HBox.hgrow="ALWAYS" alignment="TOP_LEFT"></TextField>
+            <Button fx:id="chatEntrySendButton" prefWidth="64" prefHeight="64" minWidth="64">></Button>
+
+        </HBox>
     </VBox>
 
-    <HBox fx:id="chatEntry"
-            GridPane.rowIndex="2"
-            GridPane.columnIndex="1"
-            GridPane.rowSpan="1"
-            GridPane.columnSpan="2"
-            GridPane.hgrow="ALWAYS"
-            prefHeight="64"
-            maxHeight="64">
-
-        <TextField fx:id="chatEntryField" prefHeight="64" HBox.hgrow="ALWAYS" alignment="TOP_LEFT"></TextField>
-        <Button fx:id="chatEntrySendButton" prefWidth="64" prefHeight="64" minWidth="64">></Button>
-
-    </HBox>
-
     <ListView fx:id="contactsList"
-            GridPane.rowIndex="0"
-            GridPane.columnIndex="3"
-            GridPane.rowSpan="3"
-            GridPane.columnSpan="1"
             prefWidth="300">
     </ListView>
 
-</GridPane>
+</SplitPane>
