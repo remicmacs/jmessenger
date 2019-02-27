@@ -2,22 +2,31 @@ import javafx.scene.control.ListCell;
 
 public class MessageCell extends ListCell<WSMessageTest> {
 
+    MessageCellController controller;
+
     @Override
     public void updateItem(WSMessageTest item, boolean empty) {
         super.updateItem(item, empty);
 
+        if (controller == null) {
+            controller = new MessageCellController();
+        }
+
         //int index = this.getIndex();
-        String name = null;
+        String expeditor = null;
+        String payload = null;
 
-        // Format name
-        if (item == null || empty)  {
-        }
-        else  {
-            name = item.getExpeditor() + ": " +
-                    item.getPayload();
+        if (item != null) {
+            expeditor = item.getExpeditor() + ":";
+            payload = item.getPayload();
         }
 
-        this.setText(name);
-        setGraphic(null);
+        if (controller != null) {
+            controller.setInfo(expeditor, payload);
+            setGraphic(controller.getBox());
+        }
+        else {
+            setGraphic(null);
+        }
     }
 }
