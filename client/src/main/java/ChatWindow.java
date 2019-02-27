@@ -1,6 +1,6 @@
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleListProperty;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -12,7 +12,10 @@ import java.util.List;
 
 public class ChatWindow implements MessageEvents {
     @FXML
-    ListView chatroomsList;
+    ListView roomsList;
+
+    @FXML
+    ListView conversationsList;
 
     @FXML
     ListView contactsList;
@@ -26,34 +29,33 @@ public class ChatWindow implements MessageEvents {
     @FXML
     Button chatEntrySendButton;
 
-    private List<String> cells = new ArrayList<>();
-    private List<String> contacts = new ArrayList<>();
-    private List<String> messages = new ArrayList<>();
+    private List<WSMessageTest> wsMessages = new ArrayList<>();
 
-    private ListProperty<String> listProperty = new SimpleListProperty<>();
-    private ListProperty<String> contactsListProperty = new SimpleListProperty<>();
-    private ListProperty<String> messagesListProperty = new SimpleListProperty<>();
+    private static final ObservableList<String> rooms = FXCollections.observableArrayList();
+    private static final ObservableList<String> conversations = FXCollections.observableArrayList();
+    private static final ObservableList<String> participants = FXCollections.observableArrayList();
+    private static final ObservableList<WSMessageTest> messages = FXCollections.observableArrayList();
 
     private WebSocketController webSocketController;
 
     public void initialize() {
-        // Fill the rooms list with fake data
-        for (int i = 0; i < 20; i++) {
-            cells.add("Room " + i);
+        roomsList.setItems(rooms);
+        roomsList.prefHeightProperty().bind(Bindings.size(rooms).multiply(24));
+
+        conversationsList.setItems(conversations);
+        conversationsList.prefHeightProperty().bind(Bindings.size(conversations).multiply(24));
+
+        contactsList.setItems(participants);
+
+        messagesList.setItems(messages);
+        messagesList.setCellFactory(new MessageCellFactory());
+
+        // Fill the lists with fake data
+        for (int i = 0; i < 7; i++) {
+            rooms.add("Room " + i);
+            conversations.add("Conversation " + i);
+            participants.add("Contact " + i);
         }
-
-        // Fill the contacts list with fake data
-        for (int i = 0; i < 20; i++) {
-            contacts.add("Contact " + i);
-        }
-
-        chatroomsList.itemsProperty().bind(listProperty);
-        contactsList.itemsProperty().bind(contactsListProperty);
-        messagesList.itemsProperty().bind(messagesListProperty);
-
-        listProperty.set(FXCollections.observableArrayList(cells));
-        contactsListProperty.set(FXCollections.observableArrayList(contacts));
-        messagesListProperty.set(FXCollections.observableArrayList(messages));
 
         chatEntryField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
@@ -74,13 +76,15 @@ public class ChatWindow implements MessageEvents {
         if (webSocketController != null && !message.isEmpty()) {
             webSocketController.send(message);
         }
+        WSMessageTest wsMessage = new WSMessageTest("me", "main", message);
+        messages.add(wsMessage);
     }
 
     @Override
     public void onMessage(String message) {
         System.out.println("Received: " + message);
-        messages.add(message);
-        messagesListProperty.set(FXCollections.observableArrayList(messages));
+        WSMessageTest wsMessage = new WSMessageTest("server", "main", message);
+        messages.add(wsMessage);
         messagesList.scrollTo(messages.size());
     }
 }

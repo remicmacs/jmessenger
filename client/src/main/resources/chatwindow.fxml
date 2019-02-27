@@ -19,8 +19,9 @@
           GridPane.rowSpan="3"
           GridPane.columnSpan="1"
           spacing="10"
-          alignment="CENTER"
-          prefWidth="300">
+          alignment="TOP_CENTER"
+          prefWidth="300"
+          GridPane.vgrow="ALWAYS">
 
         <Label>Username</Label>
         <ComboBox promptText="Status">
@@ -33,10 +34,21 @@
             </items>
         </ComboBox>
 
-        <ListView fx:id="chatroomsList" VBox.vgrow="ALWAYS">
+        <ScrollPane
+            VBox.vgrow="ALWAYS">
 
-        </ListView>
+            <VBox
+                prefWidth="300">
+                <TitledPane text="Conversations">
+                    <ListView fx:id="conversationsList"></ListView>
+                </TitledPane>
+                <TitledPane text="Rooms">
+                    <ListView fx:id="roomsList"></ListView>
+                </TitledPane>
+            </VBox>
 
+
+        </ScrollPane>
     </VBox>
 
 
