@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.collections.FXCollections?>
+
+<SplitPane xmlns="http://javafx.com/javafx"
+          xmlns:fx="http://javafx.com/fxml"
+          fx:controller="us.hourgeon.jmessenger.client.ChatWindow"
+          prefHeight="Infinity" prefWidth="Infinity" dividerPositions="0.2, 0.8">
+
+
+    <VBox fx:id="leftPanel"
+          spacing="10"
+          alignment="TOP_CENTER"
+          prefWidth="300">
+
+        <Label>Username</Label>
+        <ComboBox promptText="Status">
+            <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <String fx:value="available"/>
+                    <String fx:value="away"/>
+                    <String fx:value="busy"/>
+                </FXCollections>
+            </items>
+        </ComboBox>
+
+        <ScrollPane VBox.vgrow="ALWAYS"
+                    hbarPolicy="NEVER">
+
+            <VBox prefWidth="${leftPanel.width}">
+                <TitledPane text="Conversations">
+                    <ListView fx:id="conversationsList"/>
+                </TitledPane>
+                <TitledPane text="Rooms">
+                    <ListView fx:id="roomsList"/>
+                </TitledPane>
+            </VBox>
+
+
+        </ScrollPane>
+    </VBox>
+
+    <VBox spacing="10">
+        <VBox VBox.vgrow="ALWAYS">
+
+            <Label>Room something</Label>
+
+            <ListView fx:id="messagesList"
+                      VBox.vgrow="ALWAYS">
+            </ListView>
+
+        </VBox>
+
+        <HBox fx:id="chatEntry"
+              prefHeight="64"
+              maxHeight="64">
+
+            <TextField fx:id="chatEntryField" prefHeight="64"
+                       HBox.hgrow="ALWAYS" alignment="TOP_LEFT"/>
+            <Button fx:id="chatEntrySendButton" prefWidth="64" prefHeight="64" minWidth="64">></Button>
+
+        </HBox>
+    </VBox>
+
+    <ListView fx:id="contactsList"
+            prefWidth="300">
+    </ListView>
+
+</SplitPane>
