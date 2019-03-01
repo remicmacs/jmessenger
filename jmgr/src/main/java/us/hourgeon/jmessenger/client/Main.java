@@ -20,7 +20,7 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
     public void start(Stage passedStage) throws Exception {
         stage = passedStage;
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("sample.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("connectwindow.fxml"));
         Parent root = loader.load();
         Controller controller = loader.getController();
 
