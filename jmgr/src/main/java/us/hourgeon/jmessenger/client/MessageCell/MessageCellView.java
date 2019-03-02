@@ -2,7 +2,7 @@ package us.hourgeon.jmessenger.client.MessageCell;
 
 
 import javafx.scene.control.ListCell;
-import us.hourgeon.jmessenger.client.WSMessageTest;
+import us.hourgeon.jmessenger.server.Model.WSMessageTest;
 
 public class MessageCellView extends ListCell<WSMessageTest> {
 

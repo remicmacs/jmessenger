@@ -10,11 +10,12 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
+import us.hourgeon.jmessenger.server.Model.WSMessageTest;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatWindow implements MessageEvents {
+public class ChatWindowController implements MessageEvents {
     @FXML
     ListView roomsList;
 

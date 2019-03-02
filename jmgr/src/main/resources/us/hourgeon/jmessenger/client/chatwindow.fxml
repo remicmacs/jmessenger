@@ -8,7 +8,7 @@
 
 <SplitPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
-          fx:controller="us.hourgeon.jmessenger.client.ChatWindow"
+          fx:controller="us.hourgeon.jmessenger.client.ChatWindowController"
           prefHeight="Infinity" prefWidth="Infinity" dividerPositions="0.2, 0.8">
 
     <VBox fx:id="leftPanel"

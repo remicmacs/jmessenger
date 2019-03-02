@@ -5,7 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 
-public class Controller {
+public class ConnectWindowController {
 
     @FXML
     private TextField serverAddress;

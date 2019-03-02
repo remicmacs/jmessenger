@@ -8,7 +8,7 @@
 
 <VBox xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="us.hourgeon.jmessenger.client.Controller"
+            fx:controller="us.hourgeon.jmessenger.client.ConnectWindowController"
             prefHeight="400.0" prefWidth="600.0" alignment="CENTER" spacing="10" minWidth="-Infinity" maxWidth="Infinity" minHeight="-Infinity" maxHeight="Infinity">
 
     <HBox alignment="CENTER" spacing="10">

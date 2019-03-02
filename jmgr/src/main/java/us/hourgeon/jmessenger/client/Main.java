@@ -22,7 +22,7 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("connectwindow.fxml"));
         Parent root = loader.load();
-        Controller controller = loader.getController();
+        ConnectWindowController controller = loader.getController();
 
         stage.setTitle("JMessenger Client");
         stage.setScene(new Scene(root, 800, 600));
@@ -48,7 +48,7 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
         } catch (IOException e) {
             e.printStackTrace();
         }
-        ChatWindow controller = loader.getController();
+        ChatWindowController controller = loader.getController();
         controller.setWebSocketController(webSocketController);
 
         stage.setTitle("JMessenger Client");
