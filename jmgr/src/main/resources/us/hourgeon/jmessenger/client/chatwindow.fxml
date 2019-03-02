@@ -9,7 +9,7 @@
 <SplitPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
           fx:controller="us.hourgeon.jmessenger.client.ChatWindow"
-          prefHeight="Infinity" prefWidth="Infinity" dividerPositions="0.2, 0.8" stylesheets="@transparentlistview.css">
+          prefHeight="Infinity" prefWidth="Infinity" dividerPositions="0.2, 0.8">
 
     <VBox fx:id="leftPanel"
           spacing="10"
@@ -32,9 +32,9 @@
 
             <VBox prefWidth="${leftPanel.width}">
                 <TitledPane text="Conversations">
-                    <ListView fx:id="conversationsList"/>
+                    <ListView fx:id="conversationsList" stylesheets="@MessageCell/transparentlistview.css"/>
                 </TitledPane>
-                <TitledPane text="Rooms">
+                <TitledPane text="Rooms" stylesheets="@MessageCell/transparentlistview.css">
                     <ListView fx:id="roomsList"/>
                 </TitledPane>
             </VBox>

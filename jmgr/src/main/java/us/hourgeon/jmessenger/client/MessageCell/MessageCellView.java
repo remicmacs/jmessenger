@@ -1,9 +1,10 @@
-package us.hourgeon.jmessenger.client;
+package us.hourgeon.jmessenger.client.MessageCell;
 
 
 import javafx.scene.control.ListCell;
+import us.hourgeon.jmessenger.client.WSMessageTest;
 
-public class MessageCell extends ListCell<WSMessageTest> {
+public class MessageCellView extends ListCell<WSMessageTest> {
 
     MessageCellController controller;
 

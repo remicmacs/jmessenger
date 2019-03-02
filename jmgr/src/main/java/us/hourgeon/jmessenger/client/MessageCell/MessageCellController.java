@@ -1,4 +1,4 @@
-package us.hourgeon.jmessenger.client;
+package us.hourgeon.jmessenger.client.MessageCell;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
