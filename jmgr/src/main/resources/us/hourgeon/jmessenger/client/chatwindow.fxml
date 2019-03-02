@@ -9,7 +9,7 @@
 <SplitPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
           fx:controller="us.hourgeon.jmessenger.client.ChatWindow"
-          prefHeight="Infinity" prefWidth="Infinity" dividerPositions="0.2, 0.8" stylesheets="transparentlistview.css">
+          prefHeight="Infinity" prefWidth="Infinity" dividerPositions="0.2, 0.8" stylesheets="@transparentlistview.css">
 
     <VBox fx:id="leftPanel"
           spacing="10"
