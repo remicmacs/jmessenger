@@ -17,15 +17,6 @@
           prefWidth="300">
 
         <Label>Username</Label>
-        <ComboBox promptText="Status">
-            <items>
-                <FXCollections fx:factory="observableArrayList">
-                    <String fx:value="available"/>
-                    <String fx:value="away"/>
-                    <String fx:value="busy"/>
-                </FXCollections>
-            </items>
-        </ComboBox>
 
         <ScrollPane VBox.vgrow="ALWAYS"
                     hbarPolicy="NEVER">
@@ -66,7 +57,7 @@
     </VBox>
 
     <ListView fx:id="contactsList"
-            prefWidth="300">
+            prefWidth="300" stylesheets="@MessageCell/transparentlistview.css">
     </ListView>
 
 </SplitPane>

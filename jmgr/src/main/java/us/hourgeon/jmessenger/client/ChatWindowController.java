@@ -1,6 +1,5 @@
 package us.hourgeon.jmessenger.client;
 
-
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -13,9 +12,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.server.Model.WSMessageTest;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ChatWindowController implements MessageEvents {
     @FXML
@@ -35,7 +31,7 @@ public class ChatWindowController implements MessageEvents {
 
     @FXML
     Button chatEntrySendButton;
-    
+
     private static final ObservableList<String> rooms = FXCollections.observableArrayList();
     private static final ObservableList<String> conversations = FXCollections.observableArrayList();
     private static final ObservableList<String> participants = FXCollections.observableArrayList();
