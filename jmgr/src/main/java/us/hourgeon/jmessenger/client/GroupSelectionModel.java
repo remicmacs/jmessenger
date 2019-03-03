@@ -72,6 +72,7 @@ public class GroupSelectionModel<T> extends MultipleSelectionModel<T> {
     public void clearSelection() {
         indices.clear();
         selected.clear();
+        setSelectedItem(soulmate.getSelectedItem());
     }
 
     @Override

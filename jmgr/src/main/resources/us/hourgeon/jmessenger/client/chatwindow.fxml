@@ -13,7 +13,7 @@
           alignment="TOP_CENTER"
           prefWidth="300">
 
-        <Label>Username</Label>
+        <Label fx:id="nickNameLabel">Username</Label>
 
         <ScrollPane VBox.vgrow="ALWAYS"
                     hbarPolicy="NEVER">
@@ -31,15 +31,15 @@
         </ScrollPane>
 
         <HBox>
-            <Button>Add conversation</Button>
-            <Button>Add salon</Button>
+            <Button fx:id="addConvoButton">Add conversation</Button>
+            <Button fx:id="addRoomButton">Add room</Button>
         </HBox>
     </VBox>
 
     <VBox spacing="10">
         <VBox VBox.vgrow="ALWAYS">
 
-            <Label>Room something</Label>
+            <Label fx:id="roomLabel">Room something</Label>
 
             <ListView fx:id="messagesList"
                       VBox.vgrow="ALWAYS">

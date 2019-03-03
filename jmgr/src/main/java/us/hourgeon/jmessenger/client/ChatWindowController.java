@@ -6,31 +6,39 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.server.Model.WSMessageTest;
 
 public class ChatWindowController implements MessageEvents {
+
     @FXML
     ListView roomsList;
-
     @FXML
     ListView conversationsList;
-
     @FXML
     ListView contactsList;
-
     @FXML
     ListView messagesList;
-
     @FXML
     TextField chatEntryField;
-
     @FXML
     Button chatEntrySendButton;
+    @FXML
+    Label roomLabel;
+    @FXML
+    Button addConvoButton;
+    @FXML
+    Button addRoomButton;
 
     private static final ObservableList<String> rooms = FXCollections.observableArrayList();
     private static final ObservableList<String> conversations = FXCollections.observableArrayList();
@@ -38,6 +46,7 @@ public class ChatWindowController implements MessageEvents {
     private static final ObservableList<WSMessageTest> messages = FXCollections.observableArrayList();
 
     private WebSocketController webSocketController;
+
 
     /**
      * Mandatory function for JavaFX controllers
@@ -72,12 +81,8 @@ public class ChatWindowController implements MessageEvents {
         roomsList.setSelectionModel(second);
 
         // Add a listener to a selection change (just for testing now)
-        roomsList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observableValue, String old, String neww) {
-                System.out.println(old);
-                System.out.println(neww);
-            }
+        first.selectedItemProperty().addListener((observableValue, old, neww) -> {
+            roomLabel.setText(neww);
         });
 
         // Fill the lists with fake data
@@ -94,6 +99,8 @@ public class ChatWindowController implements MessageEvents {
             }
         });
         chatEntrySendButton.setOnAction(value -> send());
+
+        addRoomButton.setOnAction(value -> addRoom());
     }
 
 
@@ -139,5 +146,18 @@ public class ChatWindowController implements MessageEvents {
         WSMessageTest wsMessage = new WSMessageTest("server", "main", message);
         messages.add(wsMessage);
         messagesList.scrollTo(messages.size());
+    }
+
+
+    public void addRoom() {
+        final Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("addroomdialog.fxml"));
+        Parent root = loader.load();
+
+        dialog.setTitle("Add a room");
+        dialog.setScene(new Scene(root, 800, 600));
+        dialog.show();
     }
 }
