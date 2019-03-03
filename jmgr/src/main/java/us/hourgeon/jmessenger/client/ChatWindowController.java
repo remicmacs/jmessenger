@@ -9,15 +9,14 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.server.Model.WSMessageTest;
+
+import java.io.IOException;
 
 public class ChatWindowController implements MessageEvents {
 
@@ -30,7 +29,7 @@ public class ChatWindowController implements MessageEvents {
     @FXML
     ListView messagesList;
     @FXML
-    TextField chatEntryField;
+    TextArea chatEntryField;
     @FXML
     Button chatEntrySendButton;
     @FXML
@@ -94,8 +93,12 @@ public class ChatWindowController implements MessageEvents {
 
         // Configure the chat entry field to send the messages
         chatEntryField.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
+            if (event.getCode() == KeyCode.ENTER && !event.isShiftDown()) {
                 send();
+                event.consume();
+            }
+            if (event.getCode() == KeyCode.ENTER && event.isShiftDown()) {
+                chatEntryField.appendText("\n");
             }
         });
         chatEntrySendButton.setOnAction(value -> send());
@@ -126,11 +129,12 @@ public class ChatWindowController implements MessageEvents {
         // Check if the message is empty before sending
         if (webSocketController != null && !message.isEmpty()) {
             webSocketController.send(message);
-        }
 
-        // TODO : Here we can implement a list of messages awaiting confirmation before displaying the message
-        WSMessageTest wsMessage = new WSMessageTest("me", "main", message);
-        messages.add(wsMessage);
+            // TODO : Here we can implement a list of messages awaiting confirmation before displaying the message
+            // Or maybe we should let the websocket handle this
+            WSMessageTest wsMessage = new WSMessageTest("me", "main", message);
+            messages.add(wsMessage);
+        }
     }
 
 
@@ -154,10 +158,15 @@ public class ChatWindowController implements MessageEvents {
         dialog.initModality(Modality.APPLICATION_MODAL);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("addroomdialog.fxml"));
-        Parent root = loader.load();
+        Parent root = null;
+        try {
+            root = loader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         dialog.setTitle("Add a room");
-        dialog.setScene(new Scene(root, 800, 600));
+        dialog.setScene(new Scene(root, 400, 250));
         dialog.show();
     }
 }

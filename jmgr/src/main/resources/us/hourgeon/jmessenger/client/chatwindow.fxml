@@ -52,8 +52,8 @@
               maxHeight="64"
               VBox.vgrow="ALWAYS">
 
-            <TextField fx:id="chatEntryField" prefHeight="64"
-                       HBox.hgrow="ALWAYS" alignment="TOP_LEFT"/>
+            <TextArea fx:id="chatEntryField" prefHeight="64"
+                       HBox.hgrow="ALWAYS"/>
             <Button fx:id="chatEntrySendButton" prefWidth="64" prefHeight="64" minWidth="64">></Button>
 
         </HBox>
