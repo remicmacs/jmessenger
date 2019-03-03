@@ -3,7 +3,6 @@ package us.hourgeon.jmessenger.client.MessageCell;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.util.Callback;
-import us.hourgeon.jmessenger.client.MessageCell.MessageCellView;
 import us.hourgeon.jmessenger.server.Model.WSMessageTest;
 
 public class MessageCellFactory implements Callback<ListView<WSMessageTest>, ListCell<WSMessageTest>> {

@@ -16,6 +16,12 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
     private Stage stage;
     private WebSocketController webSocketController;
 
+
+    /**
+     * Mandatory starting function for JavaFX
+     * @param passedStage The stage passed by the application
+     * @throws Exception An Exception thrown when something goes wrong
+     */
     @Override
     public void start(Stage passedStage) throws Exception {
         stage = passedStage;
@@ -34,10 +40,21 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
     }
 
 
+    /**
+     * Application starting point
+     * @param args All arguments coming from the command line
+     */
     public static void main(String[] args) {
         launch(args);
     }
 
+
+    /**
+     * Called when the connection is opened. Is responsible for setting the content
+     * of the window for the chat window.
+     * @param handshakedata The handshake data received from the websocket
+     * @param webSocketController The websocket controller itself
+     */
     @Override
     public void onOpen(ServerHandshake handshakedata, WebSocketController webSocketController) {
         System.out.println("Connected !");
@@ -55,11 +72,24 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
         stage.getScene().setRoot(root);
     }
 
+
+    /**
+     * Called when the connection is closed
+     * @param code The closing code
+     * @param reason The closing reason
+     * @param remote True if the connection was closed by remote
+     */
     @Override
     public void onClose(int code, String reason, boolean remote) {
 
     }
 
+
+    /**
+     * Called by the connect button when the user wants to connect. Creates
+     * the websocket and connect it.
+     * @param address The address of the remote server
+     */
     @Override
     public void onConnect(String address) {
         try {
@@ -73,14 +103,21 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
         }
     }
 
+
+    /**
+     * Called when the user wants to disconnect
+     */
     @Override
     public void onDisconnect() {
-        System.out.println("Wants to disconnect");
         if (webSocketController != null) {
             webSocketController.close(1000, "User closed the connection");
         }
     }
 
+
+    /**
+     * Close the websocket controller
+     */
     private void close() {
         if (webSocketController != null) {
             webSocketController.close(1000, "Quitting application");

@@ -39,6 +39,9 @@ public class ChatWindowController implements MessageEvents {
 
     private WebSocketController webSocketController;
 
+    /**
+     * Mandatory function for JavaFX controllers
+     */
     public void initialize() {
 
         // We set the content first before setting the look
@@ -47,6 +50,7 @@ public class ChatWindowController implements MessageEvents {
         contactsList.setItems(participants);
         messagesList.setItems(messages);
 
+        // Set the cell factory of the messages list to a fancy custom cell
         messagesList.setCellFactory(new MessageCellFactory());
 
         // We set the height of the roomsList as the number of rooms times the height of a row
@@ -55,16 +59,19 @@ public class ChatWindowController implements MessageEvents {
         // We set the height of the conversationsList as the number of conversations times the height of a row
         conversationsList.prefHeightProperty().bind(Bindings.size(conversations).multiply(24));
 
+        // Create the selection models
         GroupSelectionModel<String> first = new GroupSelectionModel<>(conversations);
         GroupSelectionModel<String> second = new GroupSelectionModel<>(rooms);
+
+        // Set their soulmate to each others (ooooh so cute)
         first.setSoulmate(second);
         second.setSoulmate(first);
+
+        // Set the selection models for the lists
         conversationsList.setSelectionModel(first);
         roomsList.setSelectionModel(second);
 
-        // Sharing the same selection model so only one selection is possible between the lists
-        //roomsList.setSelectionModel(conversationsList.getSelectionModel());
-
+        // Add a listener to a selection change (just for testing now)
         roomsList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observableValue, String old, String neww) {
@@ -80,6 +87,7 @@ public class ChatWindowController implements MessageEvents {
             participants.add("Contact " + i);
         }
 
+        // Configure the chat entry field to send the messages
         chatEntryField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 send();
@@ -88,24 +96,46 @@ public class ChatWindowController implements MessageEvents {
         chatEntrySendButton.setOnAction(value -> send());
     }
 
+
+    /**
+     * Set the websocket controller and register the appropriate events
+     * @param webSocketController The websocket controller
+     */
     void setWebSocketController(WebSocketController webSocketController) {
         this.webSocketController = webSocketController;
         this.webSocketController.registerMessageEvents(this);
     }
 
+
+    /**
+     * Send the text contained in the chat entry field
+     */
     private void send() {
+
+        // Get the text and clear the text field for after
         String message = chatEntryField.getText();
         chatEntryField.clear();
+
+        // Check if the message is empty before sending
         if (webSocketController != null && !message.isEmpty()) {
             webSocketController.send(message);
         }
+
+        // TODO : Here we can implement a list of messages awaiting confirmation before displaying the message
         WSMessageTest wsMessage = new WSMessageTest("me", "main", message);
         messages.add(wsMessage);
     }
 
+
+    /**
+     * Executed when a message is received, this is were we implement adding the message
+     * to the chat window
+     * @param message The message received
+     */
     @Override
     public void onMessage(String message) {
-        System.out.println("Received: " + message);
+
+        // We add the message and set the scrolling to the bottom
         WSMessageTest wsMessage = new WSMessageTest("server", "main", message);
         messages.add(wsMessage);
         messagesList.scrollTo(messages.size());

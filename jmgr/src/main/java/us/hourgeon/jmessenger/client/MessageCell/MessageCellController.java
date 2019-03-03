@@ -17,7 +17,11 @@ public class MessageCellController {
     @FXML
     private Label label2;
 
-    public MessageCellController() {
+
+    /**
+     * Constructor
+     */
+    MessageCellController() {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("messagecell.fxml"));
         fxmlLoader.setController(this);
         try {
@@ -28,12 +32,23 @@ public class MessageCellController {
         }
     }
 
-    public void setInfo(String expeditor, String message) {
+
+    /**
+     * Set the informations in the cell
+     * @param expeditor The message's expeditor
+     * @param message The content of the message
+     */
+    void setInfo(String expeditor, String message) {
         label1.setText(expeditor);
         label2.setText(message);
     }
 
-    public VBox getBox() {
+
+    /**
+     * Getter for the container
+     * @return The layout containing all the cell content
+     */
+    VBox getBox() {
         return vBox;
     }
 }

@@ -15,6 +15,10 @@ public class ConnectWindowController {
 
     private ApplicationEvents applicationEvents;
 
+
+    /**
+     * Mandatory function for JavaFX controllers
+     */
     public void initialize() {
         connectButton.setOnAction(event -> {
             boolean isSelected = ((ToggleButton)event.getSource()).isSelected();
@@ -27,6 +31,11 @@ public class ConnectWindowController {
         });
     }
 
+
+    /**
+     * Set the application events listener
+     * @param applicationEvents A class implementing the ApplicationEvents interface
+     */
     void registerApplicationEvents(ApplicationEvents applicationEvents) {
         this.applicationEvents = applicationEvents;
     }

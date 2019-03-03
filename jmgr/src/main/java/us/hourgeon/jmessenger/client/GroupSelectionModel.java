@@ -12,12 +12,21 @@ public class GroupSelectionModel<T> extends MultipleSelectionModel<T> {
 
     private GroupSelectionModel<T> soulmate;
 
+    /**
+     * Constructor
+     * @param items The list of items used by the ListView
+     */
     GroupSelectionModel(ObservableList<T> items) {
         this.items = items;
         selected = FXCollections.observableArrayList();
         indices = FXCollections.observableArrayList();
     }
 
+
+    /**
+     * Set the object's soulmate. It will be used to synchronize selection
+     * @param soulmate Another GroupSelectionModel
+     */
     void setSoulmate(GroupSelectionModel<T> soulmate) {
         this.soulmate = soulmate;
     }

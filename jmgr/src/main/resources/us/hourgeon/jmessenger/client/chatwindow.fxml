@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
-<?import javafx.collections.FXCollections?>
 
 <SplitPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
@@ -32,6 +29,11 @@
 
 
         </ScrollPane>
+
+        <HBox>
+            <Button>Add conversation</Button>
+            <Button>Add salon</Button>
+        </HBox>
     </VBox>
 
     <VBox spacing="10">
@@ -47,7 +49,8 @@
 
         <HBox fx:id="chatEntry"
               prefHeight="64"
-              maxHeight="64">
+              maxHeight="64"
+              VBox.vgrow="ALWAYS">
 
             <TextField fx:id="chatEntryField" prefHeight="64"
                        HBox.hgrow="ALWAYS" alignment="TOP_LEFT"/>
@@ -56,8 +59,19 @@
         </HBox>
     </VBox>
 
-    <ListView fx:id="contactsList"
-            prefWidth="300" stylesheets="@MessageCell/transparentlistview.css">
-    </ListView>
+    <VBox fx:id="rightPanel"
+          spacing="10"
+          alignment="TOP_CENTER"
+          prefWidth="300">
+
+        <ListView fx:id="contactsList"
+                  prefWidth="300" VBox.vgrow="ALWAYS" stylesheets="@MessageCell/transparentlistview.css">
+        </ListView>
+
+        <HBox>
+            <Button HBox.hgrow="ALWAYS" maxWidth="Infinity">Invite</Button>
+        </HBox>
+
+    </VBox>
 
 </SplitPane>
