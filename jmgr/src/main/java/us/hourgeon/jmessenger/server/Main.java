@@ -3,19 +3,25 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 public class Main {
     static class ChatServer extends WebSocketServer {
+        ExecutorService executor;
 
-        public ChatServer( int port ) {
+        public ChatServer( int port, ExecutorService executor ) {
             super( new InetSocketAddress( port ) );
+            this.executor = executor;
         }
 
-        public ChatServer( InetSocketAddress address ) {
+        public ChatServer( InetSocketAddress address, ExecutorService executor ) {
             super( address );
+            this.executor = executor;
         }
 
         @Override
@@ -43,8 +49,11 @@ public class Main {
         @Override
         public void onMessage(WebSocket conn, String message) {
             // Include thread instantiation for message handling here
-            broadcast( message );
-            System.out.println( conn + ": " + message );
+            this.executor.execute(() -> {
+                    this.broadcast(message);
+                    System.out.println( conn + ": " + message );
+                }
+            );
 
         }
 
@@ -67,12 +76,15 @@ public class Main {
 
         System.out.println("Server booting...");
 
+        ExecutorService executor = Executors.newCachedThreadPool();
+        System.out.println("Thread pool created");
+
         int port = 38887;
         try {
             port = Integer.parseInt( args[ 0 ] );
         } catch ( Exception ex ) {
         }
-        ChatServer s = new ChatServer( port );
+        ChatServer s = new ChatServer( port, executor );
         s.start();
         System.out.println( "ChatServer started on port: " + s.getPort() );
 
