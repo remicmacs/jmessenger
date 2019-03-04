@@ -62,14 +62,14 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
         Parent root = null;
         try {
             root = loader.load();
+            ChatWindowController controller = loader.getController();
+            controller.setWebSocketController(webSocketController);
+
+            stage.setTitle("JMessenger Client");
+            stage.getScene().setRoot(root);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        ChatWindowController controller = loader.getController();
-        controller.setWebSocketController(webSocketController);
-
-        stage.setTitle("JMessenger Client");
-        stage.getScene().setRoot(root);
     }
 
 
@@ -91,16 +91,16 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
      * @param address The address of the remote server
      */
     @Override
-    public void onConnect(String address) {
-        try {
-            webSocketController = new WebSocketController(new URI(address));
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
+    public void onConnect(String address) throws URISyntaxException, IllegalArgumentException {
+        URI serverURI = new URI(address);
+        String scheme = serverURI.getScheme();
+        if (!"wss".equals( scheme ) && !"ws".equals( scheme )) {
+            throw new IllegalArgumentException( "Unsupported scheme: " + scheme );
         }
+        webSocketController = new WebSocketController(serverURI);
+
         webSocketController.registerWebSocketEvents(this);
-        if (webSocketController != null) {
-            webSocketController.connect();
-        }
+        webSocketController.connect();
     }
 
 

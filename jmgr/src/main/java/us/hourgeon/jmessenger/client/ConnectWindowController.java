@@ -2,8 +2,12 @@ package us.hourgeon.jmessenger.client;
 
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+
+import java.net.URISyntaxException;
+import java.util.Arrays;
 
 public class ConnectWindowController {
 
@@ -21,10 +25,32 @@ public class ConnectWindowController {
      */
     public void initialize() {
         connectButton.setOnAction(event -> {
-            boolean isSelected = ((ToggleButton)event.getSource()).isSelected();
-            if (isSelected) {
+            ToggleButton connectButton = (ToggleButton)event.getSource();
+            if (connectButton.isSelected()) {
                 String address = serverAddress.getText().isEmpty() ? serverAddress.getPromptText() : serverAddress.getText();
-                applicationEvents.onConnect(address);
+                try {
+                    applicationEvents.onConnect(address);
+                } catch (URISyntaxException | IllegalArgumentException e) {
+                    connectButton.setSelected(false);
+
+                    // Alert dialog to inform of bad URI format
+                    Alert alertDialog = new Alert(Alert.AlertType.ERROR);
+                    alertDialog.setTitle("Connection Error");
+                    String header = String.format(
+                            "Malformed URI : \"%s\"",
+                            address
+                    );
+                    alertDialog.setHeaderText(header);
+                    alertDialog.setResizable(true);
+
+                    String content =
+                            e.getMessage() +
+                            "\n" +
+                            Arrays.toString(e.getStackTrace());
+
+                    alertDialog.setContentText(content);
+                    alertDialog.showAndWait();
+                }
             } else {
                 applicationEvents.onDisconnect();
             }

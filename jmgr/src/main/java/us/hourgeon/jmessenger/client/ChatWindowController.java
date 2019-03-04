@@ -161,12 +161,11 @@ public class ChatWindowController implements MessageEvents {
         Parent root = null;
         try {
             root = loader.load();
+            dialog.setTitle("Add a room");
+            dialog.setScene(new Scene(root, 400, 250));
+            dialog.show();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        dialog.setTitle("Add a room");
-        dialog.setScene(new Scene(root, 400, 250));
-        dialog.show();
     }
 }
