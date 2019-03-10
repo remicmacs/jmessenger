@@ -60,4 +60,8 @@ public abstract class AbstractChannel implements Channel {
     public void subscribeUser(User newSubscriber) {
         this.subscribers.add(newSubscriber);
     }
+
+    public void appendMessage(Message incomingMessage) {
+        this.history.add(incomingMessage);
+    }
 }

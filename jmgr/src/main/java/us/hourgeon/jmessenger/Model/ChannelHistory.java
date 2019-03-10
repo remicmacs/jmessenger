@@ -6,7 +6,7 @@ import java.util.SortedSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-final class ChannelHistory implements Serializable {
+public final class ChannelHistory implements Serializable {
     /**
      * The UUID of the Channel which activity is recorded in this history
      */
@@ -52,7 +52,7 @@ final class ChannelHistory implements Serializable {
      * Get messages included in the history
      * @return {@link ChannelHistory#messages}
      */
-    SortedSet<Message> getMessages() {
+    public SortedSet<Message> getMessages() {
         return this.messages;
     }
 

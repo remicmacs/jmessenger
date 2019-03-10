@@ -164,6 +164,7 @@ public class ChatServer extends WebSocketServer {
                             new Message(conn.getAttachment(), generalChannel,
                              message, ZonedDateTime.now() );
 
+                    this.generalChannel.appendMessage(incomingMessage);
                     String fromJSON = gson.toJson(incomingMessage).toString();
                     this.broadcast(fromJSON);
                     System.out.println( conn + ": " + fromJSON );
