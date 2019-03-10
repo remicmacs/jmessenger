@@ -19,6 +19,7 @@ import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -46,17 +47,20 @@ public class ChatWindowController implements MessageEvents {
     private static final ObservableList<AbstractChannel> rooms = FXCollections.observableArrayList();
     private static final ObservableList<AbstractChannel> conversations = FXCollections.observableArrayList();
     private static final ObservableList<User> participants = FXCollections.observableArrayList();
-    private static final ObservableList<WSMessageTest> messages = FXCollections.observableArrayList();
-    
+    private static final ObservableList<Message> messages = FXCollections.observableArrayList();
+
     private ReadOnlyObjectProperty currentRoom;
 
     private WebSocketController webSocketController;
+
+    private User me;
 
 
     /**
      * Mandatory function for JavaFX controllers
      */
     public void initialize() {
+        me = new User("me", UUID.randomUUID());
 
         // We set the content first before setting the look
         roomsList.setItems(rooms);
@@ -159,7 +163,12 @@ public class ChatWindowController implements MessageEvents {
 
             // TODO : Here we can implement a list of messages awaiting confirmation before displaying the message
             // Or maybe we should let the websocket handle this
-            WSMessageTest wsMessage = new WSMessageTest("me", "main", message);
+            Message wsMessage = new Message(
+                    me,
+                    ((Channel)currentRoom.getValue()),
+                    message,
+                    ZonedDateTime.now()
+            );
             messages.add(wsMessage);
         }
     }
@@ -174,8 +183,8 @@ public class ChatWindowController implements MessageEvents {
     public void onMessage(String message) {
 
         // We add the message and set the scrolling to the bottom
-        WSMessageTest wsMessage = new WSMessageTest("server", "main", message);
-        messages.add(wsMessage);
+        Message receivedMessage = new Message(new User("server", UUID.randomUUID()), ((Channel)currentRoom.getValue()), message, ZonedDateTime.now());
+        messages.add(receivedMessage);
         messagesList.scrollTo(messages.size());
     }
 

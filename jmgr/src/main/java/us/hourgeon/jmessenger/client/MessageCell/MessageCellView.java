@@ -1,9 +1,9 @@
 package us.hourgeon.jmessenger.client.MessageCell;
 
 import javafx.scene.control.ListCell;
-import us.hourgeon.jmessenger.Model.WSMessageTest;
+import us.hourgeon.jmessenger.Model.Message;
 
-public class MessageCellView extends ListCell<WSMessageTest> {
+public class MessageCellView extends ListCell<Message> {
 
     MessageCellController controller;
 
@@ -15,7 +15,7 @@ public class MessageCellView extends ListCell<WSMessageTest> {
      * @param empty True if the message is empty
      */
     @Override
-    public void updateItem(WSMessageTest item, boolean empty) {
+    public void updateItem(Message item, boolean empty) {
         super.updateItem(item, empty);
 
         if (controller == null) {
@@ -26,11 +26,11 @@ public class MessageCellView extends ListCell<WSMessageTest> {
         String payload = null;
 
         if (item != null) {
-            expeditor = item.getExpeditor() + ":";
+            expeditor = item.getAuthorUUID() + ":";
             payload = item.getPayload();
         }
 
-        if (controller != null) {
+        if (!empty) {
             controller.setInfo(expeditor, payload);
             setGraphic(controller.getBox());
         }
