@@ -1,13 +1,15 @@
 package us.hourgeon.jmessenger.server;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import us.hourgeon.jmessenger.Model.*;
 
+import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
@@ -155,22 +157,35 @@ public class ChatServer extends WebSocketServer {
      */
     @Override
     public void onMessage(WebSocket conn, String message) {
-        // Include thread instantiation for message handling here
-        this.executor.execute(() -> {
-                    Gson gson = new Gson();
-                    Channel generalChannel =
-                            this.generalChannel;
-                    Message incomingMessage =
-                            new Message(conn.getAttachment(), generalChannel,
-                             message, ZonedDateTime.now() );
+        // Receive a Message
+        // Need a GsonBuilder ad hoc since Message uses ZonedDateTime
+        // and it is not properly (de)serialized natively.
+        Gson gsonnet = new GsonBuilder().registerTypeAdapter(
+                ZonedDateTime.class, new ZDTSerializerDeserializer()).create();
+        Message inMessage = gsonnet.fromJson(message, Message.class);
 
-                    this.generalChannel.appendMessage(incomingMessage);
-                    String fromJSON = gson.toJson(incomingMessage).toString();
-                    this.broadcast(fromJSON);
-                    System.out.println( conn + ": " + fromJSON );
-                }
-        );
+        if (inMessage.getDestinationUUID() == this.adminChannel.getChannelId()) {
 
+        } else {
+            // Include thread instantiation for message handling here
+            // For now, post all json messages in general channel because
+            // it's ugly but visible.
+            this.executor.execute(() -> {
+                        Gson gson = new Gson();
+                        Channel generalChannel =
+                                this.generalChannel;
+                        Message incomingMessage =
+                                new Message(conn.getAttachment(), generalChannel,
+                                        message, ZonedDateTime.now() );
+
+                        this.generalChannel.appendMessage(incomingMessage);
+                        String fromJSON = gson.toJson(incomingMessage);
+                        this.broadcast(fromJSON);
+                        System.out.println( conn + ": " + fromJSON );
+                        System.err.println(this.generalChannel.getHistory().getMessages());
+                    }
+            );
+        }
     }
 
     @Override

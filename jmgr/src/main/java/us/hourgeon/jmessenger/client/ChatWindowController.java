@@ -1,5 +1,6 @@
 package us.hourgeon.jmessenger.client;
 
+import com.google.gson.*;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.collections.FXCollections;
@@ -19,7 +20,9 @@ import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -171,6 +174,15 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
             Message wsMessage = new Message(me, room, message, ZonedDateTime.now());
 
             room.appendMessage(wsMessage);
+            // Send a properly serialized message
+            // Need a GsonBuilder ad hoc since Message uses ZonedDateTime
+            // and it is not properly serialized natively.
+            Gson gson =
+                    new GsonBuilder().registerTypeAdapter(
+                    ZonedDateTime.class, new ZDTSerializerDeserializer())
+                            .create();
+
+            webSocketController.send(gson.toJson(wsMessage));
             messages.add(wsMessage);
         }
     }
