@@ -1,10 +1,18 @@
 package us.hourgeon.jmessenger.server;
 
+import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import us.hourgeon.jmessenger.server.Model.Channel;
+import us.hourgeon.jmessenger.server.Model.PublicChannel;
+import us.hourgeon.jmessenger.server.Model.User;
+import us.hourgeon.jmessenger.server.Model.Message;
 
 import java.net.InetSocketAddress;
+import java.time.ZonedDateTime;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -25,6 +33,14 @@ public class ChatServer extends WebSocketServer {
 
     private int serverPortNumber = 38887;
 
+    private CopyOnWriteArraySet<Channel> openChannels =
+            new CopyOnWriteArraySet<>();
+
+    private CopyOnWriteArraySet<User> connectedUsers =
+            new CopyOnWriteArraySet<>();
+
+    final private UUID generalChannelUUID;
+
     /**
      * Constructor
      *
@@ -44,7 +60,6 @@ public class ChatServer extends WebSocketServer {
      * The server will be available on the port number passed as parameter.
      *
      * @param port
-     * @param executor {@link ChatServer#executor}
      */
     public ChatServer( int port ) {
         this(port, Executors.newCachedThreadPool());
@@ -59,6 +74,10 @@ public class ChatServer extends WebSocketServer {
         super( address );
         this.serverPortNumber = address.getPort();
         this.executor = Executors.newCachedThreadPool();
+        UUID generalChannelUUID= UUID.randomUUID();
+        PublicChannel generalChannel = new PublicChannel(generalChannelUUID);
+        this.openChannels.add(generalChannel);
+        this.generalChannelUUID = generalChannelUUID;
     }
 
     public ChatServer( int port, ExecutorService executor) {
@@ -66,6 +85,10 @@ public class ChatServer extends WebSocketServer {
         super( new InetSocketAddress( port ) );
         this.serverPortNumber = port;
         this.executor = executor;
+        UUID generalChannelUUID= UUID.randomUUID();
+        PublicChannel generalChannel = new PublicChannel(generalChannelUUID);
+        this.openChannels.add(generalChannel);
+        this.generalChannelUUID = generalChannelUUID;
     }
 
     /**
@@ -77,6 +100,13 @@ public class ChatServer extends WebSocketServer {
      */
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
+
+        // Attaching information to websocket connection
+        UUID newUUID = UUID.randomUUID();
+        String newTemporaryNickname = "User#" + newUUID;
+        User newUser = new User(newTemporaryNickname, newUUID);
+        conn.setAttachment(newUser);
+
         //This method sends a message to the new client only
         conn.send("Welcome to the server!");
         //This method sends a message to all clients connected
@@ -88,6 +118,12 @@ public class ChatServer extends WebSocketServer {
                         + " entered the room!"
         );
 
+        String test = "New user is called \"" + newUser.getNickName() + "\"\n";
+        broadcast(test);
+        System.out.println(test);
+
+        PublicChannel generalChannel = (PublicChannel) this.openChannels.iterator().next();
+        generalChannel.subscribeUser(newUser);
     }
 
     /**
@@ -118,8 +154,16 @@ public class ChatServer extends WebSocketServer {
     public void onMessage(WebSocket conn, String message) {
         // Include thread instantiation for message handling here
         this.executor.execute(() -> {
-                    this.broadcast(message);
-                    System.out.println( conn + ": " + message );
+                    Gson gson = new Gson();
+                    Channel generalChannel =
+                            this.openChannels.iterator().next();
+                    Message incomingMessage =
+                            new Message(conn.getAttachment(), generalChannel,
+                             message, ZonedDateTime.now() );
+
+                    String fromJSON = gson.toJson(incomingMessage).toString();
+                    this.broadcast(fromJSON);
+                    System.out.println( conn + ": " + fromJSON );
                 }
         );
 

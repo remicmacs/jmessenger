@@ -10,12 +10,12 @@ abstract class AbstractChannel implements Channel {
     /**
      * Users currently listening to the Channel.
      */
-    private final CopyOnWriteArraySet<User> subscribers;
+    protected final CopyOnWriteArraySet<User> subscribers;
 
     /**
      * Messages history ordered by creation time
      */
-    private final ConcurrentSkipListSet<Message> history;
+    protected final ConcurrentSkipListSet<Message> history;
 
     /**
      * UUID for Channel object
@@ -55,5 +55,9 @@ abstract class AbstractChannel implements Channel {
     @Override
     public CopyOnWriteArraySet<User> getSubscribers() {
         return new CopyOnWriteArraySet<User>(this.subscribers);
+    }
+
+    public void subscribeUser(User newSubscriber) {
+        this.subscribers.add(newSubscriber);
     }
 }
