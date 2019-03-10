@@ -58,6 +58,11 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
 
     private User me;
 
+    private static final Gson gson =
+            new GsonBuilder().registerTypeAdapter(
+                    ZonedDateTime.class, new ZDTSerializerDeserializer())
+                    .create();
+
 
     /**
      * Mandatory function for JavaFX controllers
@@ -166,7 +171,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
 
         // Check if the message is empty before sending
         if (webSocketController != null && !message.isEmpty()) {
-            webSocketController.send(message);
+            //webSocketController.send(message);
             AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
             // TODO : Here we can implement a list of messages awaiting confirmation before displaying the message
@@ -174,13 +179,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
             Message wsMessage = new Message(me, room, message, ZonedDateTime.now());
 
             room.appendMessage(wsMessage);
-            // Send a properly serialized message
-            // Need a GsonBuilder ad hoc since Message uses ZonedDateTime
-            // and it is not properly serialized natively.
-            Gson gson =
-                    new GsonBuilder().registerTypeAdapter(
-                    ZonedDateTime.class, new ZDTSerializerDeserializer())
-                            .create();
 
             webSocketController.send(gson.toJson(wsMessage));
             messages.add(wsMessage);
@@ -198,8 +196,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
         AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
         // We add the message and set the scrolling to the bottom
-        Message receivedMessage = new Message(new User("server", UUID.randomUUID()), room, message, ZonedDateTime.now());
-
+        Message receivedMessage = gson.fromJson(message, Message.class);
         messages.add(receivedMessage);
         room.appendMessage(receivedMessage);
         messagesList.scrollTo(messages.size());
