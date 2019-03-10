@@ -29,6 +29,8 @@ import java.util.UUID;
 public class ChatWindowController implements MessageEvents, ChannelEvents {
 
     @FXML
+    Button testButton;
+    @FXML
     ListView roomsList;
     @FXML
     ListView conversationsList;
@@ -142,6 +144,25 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
 
         addRoomButton.setOnAction(value -> addRoom());
         addConvoButton.setOnAction(value -> addConversation());
+        testButton.setOnAction(value -> sendTestMessage());
+    }
+
+    private void sendTestMessage() {
+        UUID adminChannelUUID = new UUID(0,0);
+        String adminCommand = "Create Channel Toto";
+
+        Message adminMessageTest = new Message(
+                this.me.getUuid(),
+                adminChannelUUID,
+                adminCommand,
+                ZonedDateTime.now()
+        );
+        Gson gson =
+                new GsonBuilder().registerTypeAdapter(
+                        ZonedDateTime.class, new ZDTSerializerDeserializer())
+                        .create();
+        String toSend = gson.toJson(adminMessageTest, Message.class);
+        this.webSocketController.send(toSend);
     }
 
 
@@ -166,7 +187,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
 
         // Check if the message is empty before sending
         if (webSocketController != null && !message.isEmpty()) {
-            webSocketController.send(message);
             AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
             // TODO : Here we can implement a list of messages awaiting confirmation before displaying the message
@@ -182,8 +202,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
                     ZonedDateTime.class, new ZDTSerializerDeserializer())
                             .create();
 
-            webSocketController.send(gson.toJson(wsMessage));
-            messages.add(wsMessage);
+            String toSend = gson.toJson(wsMessage, Message.class);
+            this.webSocketController.send(toSend);
+            //messages.add(wsMessage);
         }
     }
 
@@ -211,7 +232,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
         dialog.initModality(Modality.APPLICATION_MODAL);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("addroomdialog.fxml"));
-        Parent root = null;
+        Parent root;
         try {
             root = loader.load();
             dialog.setTitle("Add a room");
