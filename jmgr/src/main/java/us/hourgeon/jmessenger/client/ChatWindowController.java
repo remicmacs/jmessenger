@@ -20,7 +20,9 @@ import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 public class ChatWindowController implements MessageEvents {
@@ -60,6 +62,8 @@ public class ChatWindowController implements MessageEvents {
      * Mandatory function for JavaFX controllers
      */
     public void initialize() {
+
+        // TODO: USER HERE ! TO REPLACE !
         me = new User("me", UUID.randomUUID());
 
         // We set the content first before setting the look
@@ -102,7 +106,9 @@ public class ChatWindowController implements MessageEvents {
             // Here must be implemented any events following the selection of a room
             // Ideally, everything should be bound but if it is not, this is were we manually
             // set the current room and chat window content and stuff like that
-            roomLabel.setText(((AbstractChannel)currentRoom.getValue()).getChannelId().toString());
+            AbstractChannel room = (AbstractChannel)currentRoom.getValue();
+            roomLabel.setText(room.getChannelId().toString());
+            messages.setAll(room.getHistory().getMessages());
         });
 
         // Fill the lists with fake data
@@ -160,15 +166,13 @@ public class ChatWindowController implements MessageEvents {
         // Check if the message is empty before sending
         if (webSocketController != null && !message.isEmpty()) {
             webSocketController.send(message);
+            AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
             // TODO : Here we can implement a list of messages awaiting confirmation before displaying the message
             // Or maybe we should let the websocket handle this
-            Message wsMessage = new Message(
-                    me,
-                    ((Channel)currentRoom.getValue()),
-                    message,
-                    ZonedDateTime.now()
-            );
+            Message wsMessage = new Message(me, room, message, ZonedDateTime.now());
+
+            room.appendMessage(wsMessage);
             messages.add(wsMessage);
         }
     }
@@ -181,10 +185,13 @@ public class ChatWindowController implements MessageEvents {
      */
     @Override
     public void onMessage(String message) {
+        AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
         // We add the message and set the scrolling to the bottom
-        Message receivedMessage = new Message(new User("server", UUID.randomUUID()), ((Channel)currentRoom.getValue()), message, ZonedDateTime.now());
+        Message receivedMessage = new Message(new User("server", UUID.randomUUID()), room, message, ZonedDateTime.now());
+
         messages.add(receivedMessage);
+        room.appendMessage(receivedMessage);
         messagesList.scrollTo(messages.size());
     }
 
