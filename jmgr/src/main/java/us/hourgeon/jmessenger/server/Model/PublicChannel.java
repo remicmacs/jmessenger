@@ -1,6 +1,7 @@
 package us.hourgeon.jmessenger.server.Model;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -16,6 +17,10 @@ public class PublicChannel extends AbstractChannel {
             SortedSet<Message> history
     ) {
         super(uuid, initialSubscribers, history);
+    }
+
+    public PublicChannel(UUID uuid) {
+        this(uuid, Collections.emptyList(), Collections.emptySortedSet());
     }
 
     @Override

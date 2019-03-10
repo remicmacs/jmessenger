@@ -2,17 +2,18 @@ package us.hourgeon.jmessenger.server.Model;
 
 import java.io.Serializable;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 public final class Message implements Serializable, Comparable<Message> {
     /**
      * User sending the message
      */
-    private final User author;
+    private final UUID authorUUID;
 
     /**
      * Channel receiving the message
      */
-    private final Channel destination;
+    private final UUID destinationUUID;
 
     /**
      * Content of the message
@@ -28,19 +29,19 @@ public final class Message implements Serializable, Comparable<Message> {
      * Constructor
      *
      * All properties are final when the message is emitted
-     * @param author {@link Message#author}
-     * @param destination {@link Message#destination}
+     * @param author {@link Message#authorUUID}
+     * @param destination {@link Message#destinationUUID}
      * @param payload {@link Message#payload}
      * @param timestamp {@link Message#timestamp}
      */
-    Message(
+    public Message(
             User author,
             Channel destination,
             String payload,
             ZonedDateTime timestamp
     ) {
-        this.author = author;
-        this.destination = destination;
+        this.authorUUID = author.getUuid();
+        this.destinationUUID = destination.getChannelId();
         this.payload = payload;
         this.timestamp = timestamp;
     }
@@ -48,13 +49,13 @@ public final class Message implements Serializable, Comparable<Message> {
     /**
      * Get author
      *
-     * {@link Message#author}
+     * {@link Message#authorUUID}
      * The object returned is a **defensive copy** of the User.
      *
      * @return User object representing the author of the message
      */
-    public User getAuthor() {
-        return new User(this.author);
+    public UUID getAuthorUUID() {
+        return this.authorUUID;
     }
 
     /**
@@ -65,8 +66,8 @@ public final class Message implements Serializable, Comparable<Message> {
      *
      * @return Channel object, copy of the original Channel
      */
-    public Channel getDestination() {
-        return this.destination.getCopy();
+    public UUID getDestinationUUID() {
+        return this.destinationUUID;
     }
 
     /**
