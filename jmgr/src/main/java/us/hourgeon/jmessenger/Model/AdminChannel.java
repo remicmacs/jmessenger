@@ -1,4 +1,4 @@
-package us.hourgeon.jmessenger.server.Model;
+package us.hourgeon.jmessenger.Model;
 
 import java.util.Collection;
 import java.util.Collections;

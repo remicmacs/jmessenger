@@ -1,7 +1,7 @@
 package us.hourgeon.jmessenger.client.ContactCell;
 
 import javafx.scene.control.ListCell;
-import us.hourgeon.jmessenger.server.Model.User;
+import us.hourgeon.jmessenger.Model.User;
 
 public class ContactCellView extends ListCell<User> {
 

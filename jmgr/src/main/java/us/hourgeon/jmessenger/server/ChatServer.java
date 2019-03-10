@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import us.hourgeon.jmessenger.server.Model.*;
+import us.hourgeon.jmessenger.Model.*;
 
 import java.net.InetSocketAddress;
 import java.time.ZonedDateTime;

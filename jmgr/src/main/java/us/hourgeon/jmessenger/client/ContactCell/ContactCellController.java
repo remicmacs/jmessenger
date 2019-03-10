@@ -8,7 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.VBox;
-import us.hourgeon.jmessenger.server.Model.User;
 
 import java.io.IOException;
 

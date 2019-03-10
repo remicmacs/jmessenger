@@ -1,10 +1,7 @@
 package us.hourgeon.jmessenger.client;
 
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -19,7 +16,7 @@ import javafx.stage.Stage;
 import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellFactory;
 import us.hourgeon.jmessenger.client.ContactCell.ContactCellFactory;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
-import us.hourgeon.jmessenger.server.Model.*;
+import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
 import java.util.Collections;

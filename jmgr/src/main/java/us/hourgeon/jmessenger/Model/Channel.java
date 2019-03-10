@@ -1,4 +1,4 @@
-package us.hourgeon.jmessenger.server.Model;
+package us.hourgeon.jmessenger.Model;
 
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;

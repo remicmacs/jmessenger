@@ -3,7 +3,7 @@ package us.hourgeon.jmessenger.client.ChannelCell;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.util.Callback;
-import us.hourgeon.jmessenger.server.Model.AbstractChannel;
+import us.hourgeon.jmessenger.Model.AbstractChannel;
 
 public class ChannelCellFactory implements Callback<ListView<AbstractChannel>, ListCell<AbstractChannel>> {
 

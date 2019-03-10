@@ -1,7 +1,7 @@
 package us.hourgeon.jmessenger.client.ChannelCell;
 
 import javafx.scene.control.ListCell;
-import us.hourgeon.jmessenger.server.Model.AbstractChannel;
+import us.hourgeon.jmessenger.Model.AbstractChannel;
 
 public class ChannelCellView extends ListCell<AbstractChannel> {
 
