@@ -2,7 +2,7 @@ package us.hourgeon.jmessenger.server.Model;
 
 import java.util.UUID;
 
-class User {
+public class User {
     /**
      * Nickname currently used by the User
      */
@@ -23,7 +23,7 @@ class User {
      * @param nickName {@link User#nickName}
      * @param uuid {@link User#uuid}
      */
-    User(String nickName, UUID uuid){
+    public User(String nickName, UUID uuid){
         this.nickName = nickName;
         // UUID creation should be delegated to DB or DAO.
         this.uuid = uuid;
@@ -47,7 +47,7 @@ class User {
      * Get nickname of User
      * @return {@link User#nickName}
      */
-    String getNickName() {
+    public String getNickName() {
         return this.nickName;
     }
 

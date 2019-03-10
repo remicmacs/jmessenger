@@ -13,10 +13,13 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import us.hourgeon.jmessenger.client.ContactCell.ContactCellFactory;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
+import us.hourgeon.jmessenger.server.Model.User;
 import us.hourgeon.jmessenger.server.Model.WSMessageTest;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public class ChatWindowController implements MessageEvents {
 
@@ -41,7 +44,7 @@ public class ChatWindowController implements MessageEvents {
 
     private static final ObservableList<String> rooms = FXCollections.observableArrayList();
     private static final ObservableList<String> conversations = FXCollections.observableArrayList();
-    private static final ObservableList<String> participants = FXCollections.observableArrayList();
+    private static final ObservableList<User> participants = FXCollections.observableArrayList();
     private static final ObservableList<WSMessageTest> messages = FXCollections.observableArrayList();
 
     private WebSocketController webSocketController;
@@ -60,6 +63,8 @@ public class ChatWindowController implements MessageEvents {
 
         // Set the cell factory of the messages list to a fancy custom cell
         messagesList.setCellFactory(new MessageCellFactory());
+
+        contactsList.setCellFactory(new ContactCellFactory());
 
         // We set the height of the roomsList as the number of rooms times the height of a row
         roomsList.prefHeightProperty().bind(Bindings.size(rooms).multiply(24));
@@ -88,7 +93,7 @@ public class ChatWindowController implements MessageEvents {
         for (int i = 0; i < 7; i++) {
             rooms.add("Room " + i);
             conversations.add("Conversation " + i);
-            participants.add("Contact " + i);
+            participants.add(new User("Contact " + i, UUID.randomUUID()));
         }
 
         // Configure the chat entry field to send the messages
