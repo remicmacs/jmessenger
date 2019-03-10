@@ -1,7 +1,10 @@
 package us.hourgeon.jmessenger.client;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableStringValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,6 +16,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
 import us.hourgeon.jmessenger.client.ContactCell.ContactCellFactory;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.server.Model.User;
@@ -47,6 +51,8 @@ public class ChatWindowController implements MessageEvents {
     private static final ObservableList<User> participants = FXCollections.observableArrayList();
     private static final ObservableList<WSMessageTest> messages = FXCollections.observableArrayList();
 
+    private ReadOnlyObjectProperty currentRoom;
+
     private WebSocketController webSocketController;
 
 
@@ -63,7 +69,6 @@ public class ChatWindowController implements MessageEvents {
 
         // Set the cell factory of the messages list to a fancy custom cell
         messagesList.setCellFactory(new MessageCellFactory());
-
         contactsList.setCellFactory(new ContactCellFactory());
 
         // We set the height of the roomsList as the number of rooms times the height of a row
@@ -84,9 +89,17 @@ public class ChatWindowController implements MessageEvents {
         conversationsList.setSelectionModel(first);
         roomsList.setSelectionModel(second);
 
+        // The currentRoom will hold the selection from the conversations/rooms list
+        // We'll bind the room label to the selected room property so that it will update
+        // automatically
+        currentRoom = first.selectedItemProperty();
+        roomLabel.textProperty().bind(currentRoom);
+
         // Add a listener to a selection change (just for testing now)
         first.selectedItemProperty().addListener((observableValue, old, neww) -> {
-            roomLabel.setText(neww);
+            // Here must be implemented any events following the selection of a room
+            // Ideally, everything should be bound but if it is not, this is were we manually
+            // set the current room and chat window content and stuff like that
         });
 
         // Fill the lists with fake data
@@ -95,6 +108,9 @@ public class ChatWindowController implements MessageEvents {
             conversations.add("Conversation " + i);
             participants.add(new User("Contact " + i, UUID.randomUUID()));
         }
+
+        // Default setting on start
+        roomsList.getSelectionModel().select(0);
 
         // Configure the chat entry field to send the messages
         chatEntryField.setOnKeyPressed(event -> {
@@ -109,6 +125,7 @@ public class ChatWindowController implements MessageEvents {
         chatEntrySendButton.setOnAction(value -> send());
 
         addRoomButton.setOnAction(value -> addRoom());
+        addConvoButton.setOnAction(value -> addConversation());
     }
 
 
@@ -158,7 +175,7 @@ public class ChatWindowController implements MessageEvents {
     }
 
 
-    public void addRoom() {
+    private void addRoom() {
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
 
@@ -167,6 +184,23 @@ public class ChatWindowController implements MessageEvents {
         try {
             root = loader.load();
             dialog.setTitle("Add a room");
+            dialog.setScene(new Scene(root, 400, 250));
+            dialog.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void addConversation() {
+        final Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("addconversationdialog.fxml"));
+        Parent root = null;
+        try {
+            root = loader.load();
+            dialog.setTitle("Add a conversation");
             dialog.setScene(new Scene(root, 400, 250));
             dialog.show();
         } catch (IOException e) {
