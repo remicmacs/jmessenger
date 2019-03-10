@@ -3,7 +3,7 @@ package us.hourgeon.jmessenger.server.Model;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 
-final class Message implements Serializable, Comparable<Message> {
+public final class Message implements Serializable, Comparable<Message> {
     /**
      * User sending the message
      */

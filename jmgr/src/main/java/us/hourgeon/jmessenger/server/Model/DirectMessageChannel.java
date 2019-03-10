@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.SortedSet;
 import java.util.UUID;
 
-class DirectMessageChannel extends AbstractChannel {
+public class DirectMessageChannel extends AbstractChannel {
 
     /**
      * Constructor
@@ -13,7 +13,7 @@ class DirectMessageChannel extends AbstractChannel {
      * @param initialSubscribers {@link DirectMessageChannel#subscribers}
      * @param history            {@link DirectMessageChannel#history}
      */
-    DirectMessageChannel(
+    public DirectMessageChannel(
             UUID uuid,
             Collection<User> initialSubscribers,
             SortedSet<Message> history

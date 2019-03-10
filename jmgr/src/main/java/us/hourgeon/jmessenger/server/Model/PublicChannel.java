@@ -4,14 +4,14 @@ import java.util.Collection;
 import java.util.SortedSet;
 import java.util.UUID;
 
-class PublicChannel extends AbstractChannel {
+public class PublicChannel extends AbstractChannel {
     /**
      * Constructor
      *  @param uuid               {@link PublicChannel#uuid}
      * @param initialSubscribers {@link PublicChannel#subscribers}
      * @param history            {@link PublicChannel#history}
      */
-    PublicChannel(
+    public PublicChannel(
             UUID uuid, Collection<User> initialSubscribers,
             SortedSet<Message> history
     ) {

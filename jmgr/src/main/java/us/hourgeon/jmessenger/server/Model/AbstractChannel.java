@@ -6,7 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-abstract class AbstractChannel implements Channel {
+public abstract class AbstractChannel implements Channel {
     /**
      * Users currently listening to the Channel.
      */

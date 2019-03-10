@@ -1,11 +1,10 @@
 package us.hourgeon.jmessenger.client;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableStringValue;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -17,12 +16,13 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellFactory;
 import us.hourgeon.jmessenger.client.ContactCell.ContactCellFactory;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
-import us.hourgeon.jmessenger.server.Model.User;
-import us.hourgeon.jmessenger.server.Model.WSMessageTest;
+import us.hourgeon.jmessenger.server.Model.*;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.UUID;
 
 public class ChatWindowController implements MessageEvents {
@@ -46,11 +46,11 @@ public class ChatWindowController implements MessageEvents {
     @FXML
     Button addRoomButton;
 
-    private static final ObservableList<String> rooms = FXCollections.observableArrayList();
-    private static final ObservableList<String> conversations = FXCollections.observableArrayList();
+    private static final ObservableList<AbstractChannel> rooms = FXCollections.observableArrayList();
+    private static final ObservableList<AbstractChannel> conversations = FXCollections.observableArrayList();
     private static final ObservableList<User> participants = FXCollections.observableArrayList();
     private static final ObservableList<WSMessageTest> messages = FXCollections.observableArrayList();
-
+    
     private ReadOnlyObjectProperty currentRoom;
 
     private WebSocketController webSocketController;
@@ -70,6 +70,8 @@ public class ChatWindowController implements MessageEvents {
         // Set the cell factory of the messages list to a fancy custom cell
         messagesList.setCellFactory(new MessageCellFactory());
         contactsList.setCellFactory(new ContactCellFactory());
+        roomsList.setCellFactory(new ChannelCellFactory());
+        conversationsList.setCellFactory(new ChannelCellFactory());
 
         // We set the height of the roomsList as the number of rooms times the height of a row
         roomsList.prefHeightProperty().bind(Bindings.size(rooms).multiply(24));
@@ -78,8 +80,8 @@ public class ChatWindowController implements MessageEvents {
         conversationsList.prefHeightProperty().bind(Bindings.size(conversations).multiply(24));
 
         // Create the selection models
-        GroupSelectionModel<String> first = new GroupSelectionModel<>(conversations);
-        GroupSelectionModel<String> second = new GroupSelectionModel<>(rooms);
+        GroupSelectionModel<AbstractChannel> first = new GroupSelectionModel<>(conversations);
+        GroupSelectionModel<AbstractChannel> second = new GroupSelectionModel<>(rooms);
 
         // Set their soulmate to each others (ooooh so cute)
         first.setSoulmate(second);
@@ -93,20 +95,26 @@ public class ChatWindowController implements MessageEvents {
         // We'll bind the room label to the selected room property so that it will update
         // automatically
         currentRoom = first.selectedItemProperty();
-        roomLabel.textProperty().bind(currentRoom);
 
         // Add a listener to a selection change (just for testing now)
         first.selectedItemProperty().addListener((observableValue, old, neww) -> {
             // Here must be implemented any events following the selection of a room
             // Ideally, everything should be bound but if it is not, this is were we manually
             // set the current room and chat window content and stuff like that
+            roomLabel.setText(((AbstractChannel)currentRoom.getValue()).getChannelId().toString());
         });
 
         // Fill the lists with fake data
         for (int i = 0; i < 7; i++) {
-            rooms.add("Room " + i);
-            conversations.add("Conversation " + i);
             participants.add(new User("Contact " + i, UUID.randomUUID()));
+
+            conversations.add(new DirectMessageChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
+            rooms.add(new PublicChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
+            rooms.add(new PrivateChannel(UUID.randomUUID(),
+                    Collections.emptyList(),
+                    Collections.emptyList(),
+                    Collections.emptyList(),
+                    Collections.emptySortedSet()));
         }
 
         // Default setting on start

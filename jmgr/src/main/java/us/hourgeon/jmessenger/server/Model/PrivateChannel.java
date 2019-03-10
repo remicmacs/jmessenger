@@ -5,7 +5,7 @@ import java.util.SortedSet;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-class PrivateChannel extends AbstractChannel {
+public class PrivateChannel extends AbstractChannel {
     /**
      * Users authorized to subscribe to this Channel
      */
@@ -25,7 +25,7 @@ class PrivateChannel extends AbstractChannel {
      * @param initialAdministrators {@link PrivateChannel#administrators}
      * @param history {@link PrivateChannel#history}
      */
-    PrivateChannel(
+    public PrivateChannel(
             UUID uuid,
             Collection<User> initialSubscribers,
             Collection<User> initialAuthorizedUsers,
