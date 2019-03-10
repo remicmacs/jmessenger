@@ -1,0 +1,10 @@
+.list-cell {
+    -fx-background-color: white;
+}
+.list-view {
+    -fx-background-color: white;
+}
+.list-cell:selected {
+    -fx-background-color: #cccccc;
+    -fx-text-fill: black;
+}

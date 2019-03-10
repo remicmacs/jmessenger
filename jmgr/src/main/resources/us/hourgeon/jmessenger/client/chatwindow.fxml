@@ -42,7 +42,8 @@
             <Label fx:id="roomLabel">Room something</Label>
 
             <ListView fx:id="messagesList"
-                      VBox.vgrow="ALWAYS">
+                      VBox.vgrow="ALWAYS"
+                      stylesheets="@whitelistview.css">
             </ListView>
 
         </VBox>

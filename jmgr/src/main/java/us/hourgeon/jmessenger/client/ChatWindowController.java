@@ -20,12 +20,10 @@ import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
-public class ChatWindowController implements MessageEvents {
+public class ChatWindowController implements MessageEvents, ChannelEvents {
 
     @FXML
     ListView roomsList;
@@ -75,8 +73,8 @@ public class ChatWindowController implements MessageEvents {
         // Set the cell factory of the messages list to a fancy custom cell
         messagesList.setCellFactory(new MessageCellFactory());
         contactsList.setCellFactory(new ContactCellFactory());
-        roomsList.setCellFactory(new ChannelCellFactory());
-        conversationsList.setCellFactory(new ChannelCellFactory());
+        roomsList.setCellFactory(new ChannelCellFactory(this));
+        conversationsList.setCellFactory(new ChannelCellFactory(this));
 
         // We set the height of the roomsList as the number of rooms times the height of a row
         roomsList.prefHeightProperty().bind(Bindings.size(rooms).multiply(24));
@@ -227,5 +225,32 @@ public class ChatWindowController implements MessageEvents {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onQuitRequest(UUID uuid) {
+        AbstractChannel room = (AbstractChannel)currentRoom.getValue();
+
+        // We add the message and set the scrolling to the bottom
+        Message receivedMessage = new Message(me, room, "quit " + uuid.toString(), ZonedDateTime.now());
+
+        messages.add(receivedMessage);
+        room.appendMessage(receivedMessage);
+    }
+
+    @Override
+    public void onDeleteRequest(UUID uuid) {
+        AbstractChannel room = (AbstractChannel)currentRoom.getValue();
+
+        // We add the message and set the scrolling to the bottom
+        Message receivedMessage = new Message(me, room, "delete " + uuid.toString(), ZonedDateTime.now());
+
+        messages.add(receivedMessage);
+        room.appendMessage(receivedMessage);
+    }
+
+    @Override
+    public void onCreateRequest() {
+
     }
 }

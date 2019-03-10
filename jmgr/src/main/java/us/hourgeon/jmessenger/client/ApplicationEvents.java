@@ -1,6 +1,5 @@
 package us.hourgeon.jmessenger.client;
 
-
 import java.net.URISyntaxException;
 
 public interface ApplicationEvents {

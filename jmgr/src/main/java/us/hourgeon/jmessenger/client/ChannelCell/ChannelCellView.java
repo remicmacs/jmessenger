@@ -2,10 +2,15 @@ package us.hourgeon.jmessenger.client.ChannelCell;
 
 import javafx.scene.control.ListCell;
 import us.hourgeon.jmessenger.Model.AbstractChannel;
+import us.hourgeon.jmessenger.client.ChannelEvents;
 
 public class ChannelCellView extends ListCell<AbstractChannel> {
 
     private ChannelCellController controller;
+
+    ChannelCellView(ChannelEvents events) {
+        controller = new ChannelCellController(events);
+    }
 
     /**
      * Mandatory function for ListView's cells. Takes the contact name.
@@ -16,12 +21,9 @@ public class ChannelCellView extends ListCell<AbstractChannel> {
     public void updateItem(AbstractChannel item, boolean empty) {
         super.updateItem(item, empty);
 
-        if (controller == null) {
-            controller = new ChannelCellController();
-        }
-
         if (!empty) {
             controller.setNickname(item.getChannelId().toString());
+            controller.setUUID(item.getChannelId());
         } else {
             setGraphic(null);
         }
