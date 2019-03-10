@@ -217,6 +217,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
             dialog.setTitle("Add a room");
             dialog.setScene(new Scene(root, 400, 250));
             dialog.show();
+            ((AddChannelDialogController)loader.getController()).setChannelEvents(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -227,13 +228,15 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("addconversationdialog.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("addroomdialog.fxml"));
         Parent root = null;
         try {
             root = loader.load();
             dialog.setTitle("Add a conversation");
             dialog.setScene(new Scene(root, 400, 250));
             dialog.show();
+            ((AddChannelDialogController)loader.getController()).setDirect();
+            ((AddChannelDialogController)loader.getController()).setChannelEvents(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -262,7 +265,11 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
     }
 
     @Override
-    public void onCreateRequest() {
-
+    public void onCreateRequest(String name, String invites, boolean isDirect, boolean isPrivate) {
+        System.out.println("Create channel !");
+        System.out.println("Name : " + name);
+        System.out.println("Invites : " + invites);
+        System.out.println("Is direct : " + isDirect);
+        System.out.println("Is private : " + isPrivate);
     }
 }
