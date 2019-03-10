@@ -22,7 +22,7 @@ abstract class AbstractChannel implements Channel {
      *
      * Database primary key.
      */
-    private final UUID uuid;
+    protected final UUID uuid;
 
     /**
      * Constructor

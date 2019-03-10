@@ -4,10 +4,7 @@ import com.google.gson.Gson;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import us.hourgeon.jmessenger.server.Model.Channel;
-import us.hourgeon.jmessenger.server.Model.PublicChannel;
-import us.hourgeon.jmessenger.server.Model.User;
-import us.hourgeon.jmessenger.server.Model.Message;
+import us.hourgeon.jmessenger.server.Model.*;
 
 import java.net.InetSocketAddress;
 import java.time.ZonedDateTime;
@@ -39,7 +36,9 @@ public class ChatServer extends WebSocketServer {
     private CopyOnWriteArraySet<User> connectedUsers =
             new CopyOnWriteArraySet<>();
 
-    final private UUID generalChannelUUID;
+    final private PublicChannel generalChannel;
+
+    final private AdminChannel adminChannel = new AdminChannel();
 
     /**
      * Constructor
@@ -77,7 +76,7 @@ public class ChatServer extends WebSocketServer {
         UUID generalChannelUUID= UUID.randomUUID();
         PublicChannel generalChannel = new PublicChannel(generalChannelUUID);
         this.openChannels.add(generalChannel);
-        this.generalChannelUUID = generalChannelUUID;
+        this.generalChannel = generalChannel;
     }
 
     public ChatServer( int port, ExecutorService executor) {
@@ -88,7 +87,7 @@ public class ChatServer extends WebSocketServer {
         UUID generalChannelUUID= UUID.randomUUID();
         PublicChannel generalChannel = new PublicChannel(generalChannelUUID);
         this.openChannels.add(generalChannel);
-        this.generalChannelUUID = generalChannelUUID;
+        this.generalChannel = generalChannel;
     }
 
     /**
@@ -122,8 +121,12 @@ public class ChatServer extends WebSocketServer {
         broadcast(test);
         System.out.println(test);
 
-        PublicChannel generalChannel = (PublicChannel) this.openChannels.iterator().next();
-        generalChannel.subscribeUser(newUser);
+
+        // All users are subscribed to general and admin channel.
+        // General channel is the shoutbox
+        // Admin channel is a hidden channel for all commands messages
+        this.generalChannel.subscribeUser(newUser);
+        this.adminChannel.subscribeUser(newUser);
     }
 
     /**
@@ -156,7 +159,7 @@ public class ChatServer extends WebSocketServer {
         this.executor.execute(() -> {
                     Gson gson = new Gson();
                     Channel generalChannel =
-                            this.openChannels.iterator().next();
+                            this.generalChannel;
                     Message incomingMessage =
                             new Message(conn.getAttachment(), generalChannel,
                              message, ZonedDateTime.now() );
