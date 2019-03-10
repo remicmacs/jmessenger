@@ -90,6 +90,6 @@ public final class Message implements Serializable, Comparable<Message> {
 
     @Override
     public int compareTo(Message message) {
-        return 0;
+        return this.timestamp.compareTo(message.timestamp);
     }
 }
