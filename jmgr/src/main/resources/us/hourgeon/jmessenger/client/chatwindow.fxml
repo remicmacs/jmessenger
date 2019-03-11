@@ -71,7 +71,7 @@
         </ListView>
 
         <HBox>
-            <Button HBox.hgrow="ALWAYS" maxWidth="Infinity">Invite</Button>
+            <Button HBox.hgrow="ALWAYS" maxWidth="Infinity" fx:id="inviteButton">Invite</Button>
         </HBox>
 
     </VBox>

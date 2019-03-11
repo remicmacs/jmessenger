@@ -20,13 +20,12 @@ import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.UUID;
 
-public class ChatWindowController implements MessageEvents, ChannelEvents {
+public class ChatWindowController implements MessageEvents, ChannelEvents, ContactEvents {
 
     @FXML
     Button testButton;
@@ -48,6 +47,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
     Button addConvoButton;
     @FXML
     Button addRoomButton;
+    @FXML
+    Button inviteButton;
 
     private static final ObservableList<AbstractChannel> rooms = FXCollections.observableArrayList();
     private static final ObservableList<AbstractChannel> conversations = FXCollections.observableArrayList();
@@ -64,6 +65,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
             new GsonBuilder().registerTypeAdapter(
                     ZonedDateTime.class, new ZDTSerializerDeserializer())
                     .create();
+
+    private static final UUID adminChannelUUID = new UUID(0,0);
 
 
     /**
@@ -82,7 +85,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
 
         // Set the cell factory of the messages list to a fancy custom cell
         messagesList.setCellFactory(new MessageCellFactory());
-        contactsList.setCellFactory(new ContactCellFactory());
+        contactsList.setCellFactory(new ContactCellFactory(this));
         roomsList.setCellFactory(new ChannelCellFactory(this));
         conversationsList.setCellFactory(new ChannelCellFactory(this));
 
@@ -149,6 +152,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
 
         addRoomButton.setOnAction(value -> addRoom());
         addConvoButton.setOnAction(value -> addConversation());
+        inviteButton.setOnAction(value -> openInviteDialog());
         testButton.setOnAction(value -> sendTestMessage());
     }
 
@@ -162,10 +166,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
                 adminCommand,
                 ZonedDateTime.now()
         );
-        Gson gson =
-                new GsonBuilder().registerTypeAdapter(
-                        ZonedDateTime.class, new ZDTSerializerDeserializer())
-                        .create();
+
         String toSend = gson.toJson(adminMessageTest, Message.class);
         this.webSocketController.send(toSend);
     }
@@ -191,14 +192,10 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
         chatEntryField.clear();
 
         // Check if the message is empty before sending
-        if (webSocketController != null && !message.isEmpty()) {
+        if (!message.isEmpty()) {
             AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
-            // TODO : Here we can implement a list of messages awaiting confirmation before displaying the message
-            // Or maybe we should let the websocket handle this
             Message wsMessage = new Message(me, room, message, ZonedDateTime.now());
-
-            room.appendMessage(wsMessage);
 
             String toSend = gson.toJson(wsMessage, Message.class);
             this.webSocketController.send(toSend);
@@ -259,6 +256,26 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
         }
     }
 
+
+    private void openInviteDialog() {
+        final Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("invitedialog.fxml"));
+        Parent root = null;
+        try {
+            root = loader.load();
+            dialog.setTitle("Invite users");
+            dialog.setScene(new Scene(root, 400, 250));
+            dialog.show();
+            ((InviteDialogController)loader.getController()).setChannel((AbstractChannel)currentRoom.getValue());
+            ((InviteDialogController)loader.getController()).setEvents(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     @Override
     public void onQuitRequest(UUID uuid) {
         AbstractChannel room = (AbstractChannel)currentRoom.getValue();
@@ -288,5 +305,48 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
         System.out.println("Invites : " + invites);
         System.out.println("Is direct : " + isDirect);
         System.out.println("Is private : " + isPrivate);
+
+
+        String adminCommand = "Create Channel " + name;
+        Message adminMessageTest = new Message(
+                this.me.getUuid(),
+                adminChannelUUID,
+                adminCommand,
+                ZonedDateTime.now()
+        );
+
+        String toSend = gson.toJson(adminMessageTest, Message.class);
+        this.webSocketController.send(toSend);
+    }
+
+    @Override
+    public void onInviteRequest(UUID user, UUID channel) {
+        System.out.println("Request kicking " + user.toString() + " from " + channel.toString());
+    }
+
+    @Override
+    public void onInvitesRequest(ArrayList<User> users, AbstractChannel channel) {
+        System.out.println("Invites request: ");
+        for (User user:users) {
+            System.out.println(user.getUuid());
+        }
+    }
+
+    @Override
+    public void onKickRequest(UUID user) {
+        AbstractChannel channel = (AbstractChannel)currentRoom.getValue();
+        System.out.println("Request kicking " + user.toString() + " from " + channel.getChannelId().toString());
+    }
+
+    @Override
+    public void onBanRequest(UUID user) {
+        AbstractChannel channel = (AbstractChannel)currentRoom.getValue();
+        System.out.println("Request banning " + user.toString() + " from " + channel.getChannelId().toString());
+    }
+
+    @Override
+    public void onPromoteRequest(UUID user) {
+        AbstractChannel channel = (AbstractChannel)currentRoom.getValue();
+        System.out.println("Request promoting " + user.toString() + " from " + channel.getChannelId().toString());
     }
 }
