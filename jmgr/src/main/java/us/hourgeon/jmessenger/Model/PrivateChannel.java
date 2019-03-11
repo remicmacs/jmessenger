@@ -37,15 +37,4 @@ public class PrivateChannel extends AbstractChannel {
                 new CopyOnWriteArraySet<>(initialAuthorizedUsers);
         this.administrators = new CopyOnWriteArraySet<>(initialAdministrators);
     }
-
-    @Override
-    public Channel getCopy() {
-        return new PrivateChannel(
-                this.getChannelId(),
-                this.getSubscribers(),
-                this.authorizedUsers,
-                this.administrators,
-                this.getHistory().getMessages()
-        );
-    }
 }

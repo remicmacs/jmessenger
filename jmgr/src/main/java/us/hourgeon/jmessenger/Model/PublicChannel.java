@@ -22,14 +22,4 @@ public class PublicChannel extends AbstractChannel {
     public PublicChannel(UUID uuid) {
         this(uuid, Collections.emptyList(), Collections.emptySortedSet());
     }
-
-    @Override
-    public Channel getCopy() {
-        // No need to send copy of COW set because it is instantiated in
-        // constructor anyway.
-        return new PublicChannel(
-                this.getChannelId(),
-                this.getSubscribers(),
-                this.getHistory().getMessages());
-    }
 }

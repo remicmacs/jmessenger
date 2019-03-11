@@ -13,13 +13,6 @@ public interface Channel {
     UUID getChannelId();
 
     /**
-     * Get a copy of the Channel object
-     *
-     * @return A (defensive) copy of the Channel.
-     */
-    Channel getCopy();
-
-    /**
      * Get message history of Channel
      * @return The message history until now
      */

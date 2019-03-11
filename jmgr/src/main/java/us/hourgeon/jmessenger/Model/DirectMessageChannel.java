@@ -20,13 +20,4 @@ public class DirectMessageChannel extends AbstractChannel {
     ) {
         super(uuid, initialSubscribers, history);
     }
-
-    @Override
-    public Channel getCopy() {
-        return new DirectMessageChannel(
-                this.getChannelId(),
-                this.getSubscribers(),
-                this.getHistory().getMessages()
-        );
-    }
 }

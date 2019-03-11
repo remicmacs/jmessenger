@@ -40,9 +40,4 @@ public class AdminChannel extends AbstractChannel {
     AdminChannel(UUID uuid, Collection<User> initialSubscribers, SortedSet<Message> history) {
         super(uuid, initialSubscribers, history);
     }
-
-    @Override
-    public Channel getCopy() {
-        return null;
-    }
 }
