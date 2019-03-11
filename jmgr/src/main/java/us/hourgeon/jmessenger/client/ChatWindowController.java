@@ -150,8 +150,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         });
         chatEntrySendButton.setOnAction(value -> send());
 
-        addRoomButton.setOnAction(value -> addRoom());
-        addConvoButton.setOnAction(value -> addConversation());
+        addRoomButton.setOnAction(value -> openAddChannelDialog(false));
+        addConvoButton.setOnAction(value -> openAddChannelDialog(true));
         inviteButton.setOnAction(value -> openInviteDialog());
         testButton.setOnAction(value -> sendTestMessage());
     }
@@ -220,36 +220,23 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
 
-    private void addRoom() {
+    private void openAddChannelDialog(boolean isDirect) {
+        String title = isDirect ? "Add a conversation" : "Add a room";
+
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("addroomdialog.fxml"));
-        Parent root;
         try {
-            root = loader.load();
-            dialog.setTitle("Add a room");
+            Parent root = loader.load();
+
+            dialog.setTitle(title);
             dialog.setScene(new Scene(root, 400, 250));
             dialog.show();
-            ((AddChannelDialogController)loader.getController()).setChannelEvents(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
-
-    private void addConversation() {
-        final Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL);
-
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("addroomdialog.fxml"));
-        Parent root = null;
-        try {
-            root = loader.load();
-            dialog.setTitle("Add a conversation");
-            dialog.setScene(new Scene(root, 400, 250));
-            dialog.show();
-            ((AddChannelDialogController)loader.getController()).setDirect();
+            if (isDirect) {
+                ((AddChannelDialogController)loader.getController()).setDirect();
+            }
             ((AddChannelDialogController)loader.getController()).setChannelEvents(this);
         } catch (IOException e) {
             e.printStackTrace();
@@ -262,12 +249,13 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         dialog.initModality(Modality.APPLICATION_MODAL);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("invitedialog.fxml"));
-        Parent root = null;
         try {
-            root = loader.load();
+            Parent root = loader.load();
+
             dialog.setTitle("Invite users");
             dialog.setScene(new Scene(root, 400, 250));
             dialog.show();
+
             ((InviteDialogController)loader.getController()).setChannel((AbstractChannel)currentRoom.getValue());
             ((InviteDialogController)loader.getController()).setEvents(this);
         } catch (IOException e) {
@@ -278,24 +266,12 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
     @Override
     public void onQuitRequest(UUID uuid) {
-        AbstractChannel room = (AbstractChannel)currentRoom.getValue();
-
-        // We add the message and set the scrolling to the bottom
-        Message receivedMessage = new Message(me, room, "quit " + uuid.toString(), ZonedDateTime.now());
-
-        messages.add(receivedMessage);
-        room.appendMessage(receivedMessage);
+        System.out.println("Request quitting channel " + uuid.toString());
     }
 
     @Override
     public void onDeleteRequest(UUID uuid) {
-        AbstractChannel room = (AbstractChannel)currentRoom.getValue();
-
-        // We add the message and set the scrolling to the bottom
-        Message receivedMessage = new Message(me, room, "delete " + uuid.toString(), ZonedDateTime.now());
-
-        messages.add(receivedMessage);
-        room.appendMessage(receivedMessage);
+        System.out.println("Request removing channel " + uuid.toString());
     }
 
     @Override
@@ -306,16 +282,14 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         System.out.println("Is direct : " + isDirect);
         System.out.println("Is private : " + isPrivate);
 
-
-        String adminCommand = "Create Channel " + name;
-        Message adminMessageTest = new Message(
+        Message message = new Message(
                 this.me.getUuid(),
                 adminChannelUUID,
-                adminCommand,
+                "Create Channel " + name,
                 ZonedDateTime.now()
         );
 
-        String toSend = gson.toJson(adminMessageTest, Message.class);
+        String toSend = gson.toJson(message, Message.class);
         this.webSocketController.send(toSend);
     }
 
