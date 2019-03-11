@@ -55,7 +55,7 @@ public class User {
      * Get UUID of User
      * @return {@link User#uuid}
      */
-    UUID getUuid() {
+    public UUID getUuid() {
         return this.uuid;
     }
 

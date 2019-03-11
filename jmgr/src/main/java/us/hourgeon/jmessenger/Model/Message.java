@@ -8,22 +8,22 @@ public final class Message implements Serializable, Comparable<Message> {
     /**
      * User sending the message
      */
-    private UUID authorUUID;
+    private final UUID authorUUID;
 
     /**
      * Channel receiving the message
      */
-    private UUID destinationUUID;
+    private final UUID destinationUUID;
 
     /**
      * Content of the message
      */
-    private String payload;
+    private final String payload;
 
     /**
      * Instant when the message was emitted
      */
-    private ZonedDateTime timestamp;
+    private final ZonedDateTime timestamp;
 
     /**
      * Constructor
@@ -46,8 +46,16 @@ public final class Message implements Serializable, Comparable<Message> {
         this.timestamp = timestamp;
     }
 
-    public Message() {
-
+    public Message(
+            UUID authorUUID,
+            UUID destinationUUID,
+            String payload,
+            ZonedDateTime timestamp
+    ) {
+        this.authorUUID = authorUUID;
+        this.destinationUUID = destinationUUID;
+        this.payload = payload;
+        this.timestamp = timestamp;
     }
 
     /**
@@ -65,7 +73,7 @@ public final class Message implements Serializable, Comparable<Message> {
     /**
      * Get destination of message
      *
-     * {@link Message#destination}
+     * {@link Message#destinationUUID}
      * The object returned is a **defensive copy** of the Channel.
      *
      * @return Channel object, copy of the original Channel

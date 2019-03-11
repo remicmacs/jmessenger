@@ -33,6 +33,7 @@
         <HBox>
             <Button fx:id="addConvoButton">Add conversation</Button>
             <Button fx:id="addRoomButton">Add room</Button>
+            <Button fx:id="testButton">Test</Button>
         </HBox>
     </VBox>
 
