@@ -24,12 +24,25 @@ public abstract class AbstractChannel implements Channel {
      */
     protected final UUID uuid;
 
+    protected final String alias;
+
     /**
      * Constructor
      * @param uuid {@link AbstractChannel#uuid}
      * @param initialSubscribers {@link AbstractChannel#subscribers}
      * @param history {@link AbstractChannel#history}
+     * @param alias
      */
+    AbstractChannel(
+            UUID uuid, Collection<User> initialSubscribers,
+            SortedSet<Message> history,
+            String alias) {
+        subscribers = new CopyOnWriteArraySet<>(initialSubscribers);
+        this.uuid = uuid;
+        this.history = new ConcurrentSkipListSet<>(history);
+        this.alias = alias;
+    }
+
     AbstractChannel(
             UUID uuid, Collection<User> initialSubscribers,
             SortedSet<Message> history
@@ -37,6 +50,7 @@ public abstract class AbstractChannel implements Channel {
         subscribers = new CopyOnWriteArraySet<>(initialSubscribers);
         this.uuid = uuid;
         this.history = new ConcurrentSkipListSet<>(history);
+        this.alias = "Channel#"+this.uuid.toString();
     }
 
     @Override
@@ -63,5 +77,9 @@ public abstract class AbstractChannel implements Channel {
 
     public void appendMessage(Message incomingMessage) {
         this.history.add(incomingMessage);
+    }
+
+    public String getAlias() {
+        return this.alias;
     }
 }

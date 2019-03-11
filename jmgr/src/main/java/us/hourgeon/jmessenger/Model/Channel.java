@@ -29,4 +29,12 @@ public interface Channel {
      * @return subscribers of the Channel
      */
     CopyOnWriteArraySet<User> getSubscribers();
+
+    /**
+     * Get the current alias of the channel
+     *
+     * Because humans don't remember UUID very well.
+     * @return
+     */
+    String getAlias();
 }

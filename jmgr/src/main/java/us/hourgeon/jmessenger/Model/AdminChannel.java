@@ -37,7 +37,11 @@ public class AdminChannel extends AbstractChannel {
      * @param initialSubscribers {@link AbstractChannel#subscribers}
      * @param history            {@link AbstractChannel#history}
      */
-    AdminChannel(UUID uuid, Collection<User> initialSubscribers, SortedSet<Message> history) {
-        super(uuid, initialSubscribers, history);
+    AdminChannel(
+            UUID uuid,
+            Collection<User> initialSubscribers,
+            SortedSet<Message> history
+    ) {
+        super(uuid, initialSubscribers, history, "Admin");
     }
 }

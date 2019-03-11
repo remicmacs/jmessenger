@@ -18,6 +18,5 @@ public class DirectMessageChannel extends AbstractChannel {
             Collection<User> initialSubscribers,
             SortedSet<Message> history
     ) {
-        super(uuid, initialSubscribers, history);
-    }
+        super(uuid, initialSubscribers, history); }
 }
