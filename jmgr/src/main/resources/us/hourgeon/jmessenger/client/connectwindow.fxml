@@ -13,7 +13,7 @@
 
     <HBox alignment="CENTER" spacing="10">
         <Label>Server</Label>
-        <TextField fx:id="serverAddress" promptText="ws://demos.kaazing.com/echo" />
+        <TextField fx:id="serverAddress" promptText="ws://localhost:38887" />
     </HBox>
 
     <ToggleButton fx:id="connectButton">Connect</ToggleButton>
