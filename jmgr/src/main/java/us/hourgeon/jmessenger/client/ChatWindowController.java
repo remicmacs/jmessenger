@@ -74,9 +74,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
      */
     public void initialize() {
 
-        // TODO: USER HERE ! TO REPLACE !
-        me = new User("me", UUID.randomUUID());
-
         // Set placeholder before initializing the lists
         showLoading();
         lockAll();
@@ -143,7 +140,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         inviteButton.setOnAction(value -> openInviteDialog());
         testButton.setOnAction(value -> sendTestMessage());
 
-        initializeLists();
+        //initializeLists();
     }
 
 
@@ -152,7 +149,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         for (int i = 0; i < 7; i++) {
             participants.add(new User("Contact " + i, UUID.randomUUID()));
 
-            //conversations.add(new DirectMessageChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
+            conversations.add(new DirectMessageChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
             rooms.add(new PublicChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
             rooms.add(new PrivateChannel(UUID.randomUUID(),
                     Collections.emptyList(),
@@ -293,9 +290,36 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         Message receivedMessage = gson.fromJson(message, Message.class);
         // Temporary dump
         System.err.println(message);
-        messages.add(receivedMessage);
-        room.appendMessage(receivedMessage);
-        messagesList.scrollTo(messages.size());
+
+        // Check for admin message, else we'll guess it's a message
+        if (receivedMessage.getDestinationUUID().equals(adminChannelUUID)) {
+
+            // If we receive the new connection message, the author UUID is the
+            // client UUID given by the server. We can then initialize the user
+            // and proceed with the rest of the session initialization
+            if (receivedMessage.getPayload().equals("new connection: /")) {
+                me = new User("me", receivedMessage.getAuthorUUID());
+                initializeLists();
+            }
+
+        } else {
+            //AbstractChannel room;
+            for (AbstractChannel channel:rooms) {
+                System.out.println(channel.getChannelId());
+                if (channel.getChannelId().equals(receivedMessage.getAuthorUUID())) {
+                    System.out.println("Channel found in rooms !");
+                }
+            }
+            for (AbstractChannel channel:conversations) {
+                System.out.println(channel.getChannelId());
+                if (channel.getChannelId().equals(receivedMessage.getAuthorUUID())) {
+                    System.out.println("Channel found in conversations !");
+                }
+            }
+            messages.add(receivedMessage);
+            room.appendMessage(receivedMessage);
+            messagesList.scrollTo(messages.size());
+        }
     }
 
 
