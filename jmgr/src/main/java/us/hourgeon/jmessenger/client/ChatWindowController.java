@@ -202,7 +202,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
 
             String toSend = gson.toJson(wsMessage, Message.class);
             this.webSocketController.send(toSend);
-            //messages.add(wsMessage);
         }
     }
 
