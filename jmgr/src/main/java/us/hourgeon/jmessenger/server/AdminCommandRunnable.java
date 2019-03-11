@@ -1,7 +1,15 @@
 package us.hourgeon.jmessenger.server;
 
-import us.hourgeon.jmessenger.Model.PublicChannel;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.java_websocket.WebSocket;
+import us.hourgeon.jmessenger.Model.Message;
+import us.hourgeon.jmessenger.Model.User;
+import us.hourgeon.jmessenger.Model.ZDTSerializerDeserializer;
 
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -12,15 +20,45 @@ import java.util.UUID;
  */
 public class AdminCommandRunnable implements Runnable {
     private final ChatServer serverInstance;
-    public AdminCommandRunnable(String payload, ChatServer serverInstance) {
+    private final Message adminMessage;
+    private final User sender;
+    private final Gson gson = new GsonBuilder().registerTypeAdapter(
+            ZonedDateTime.class, new ZDTSerializerDeserializer()).create();
+    public AdminCommandRunnable(Message adminMessage,
+                                ChatServer serverInstance, User sender) {
         this.serverInstance = serverInstance;
+        this.adminMessage = adminMessage;
+        this.sender = sender;
+    }
+
+    public List<User> getConnectedUsers() {
+        return new ArrayList<>(this.serverInstance.getConnectedUsers());
     }
 
     @Override
     public void run() {
-        PublicChannel newPublicChannel = new PublicChannel(UUID.randomUUID());
-        this.serverInstance.addChannel(newPublicChannel);
-        System.err.println("List of open channels : ");
-        System.err.println(this.serverInstance.getOpenChannels());
+        System.err.println("Launch admin task");
+        WebSocket connection = null;
+        for (WebSocket aConnection : this.serverInstance.getConnections()) {
+            User attachedUser = aConnection.getAttachment();
+            if (this.sender.getUuid().equals(attachedUser.getUuid())) {
+                connection = aConnection;
+            }
+        }
+
+        List<User> userList = this.getConnectedUsers();
+
+        String payload = this.gson.toJson(userList);
+
+        Message responseMessage = new Message(
+                this.adminMessage.getAuthorUUID(),
+                new UUID(0,0),
+                payload,
+                ZonedDateTime.now()
+        );
+
+        if (connection != null) {
+            connection.send(gson.toJson(responseMessage, Message.class));
+        }
     }
 }

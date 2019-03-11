@@ -11,7 +11,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class Main extends Application implements WebSocketEvents, ApplicationEvents {
+public class Main extends Application
+        implements WebSocketEvents, ApplicationEvents {
 
     private Stage stage;
     private WebSocketController webSocketController;
@@ -57,7 +58,6 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
      */
     @Override
     public void onOpen(ServerHandshake handshakedata, WebSocketController webSocketController) {
-        System.out.println("Connected !");
         FXMLLoader loader = new FXMLLoader(getClass().getResource("chatwindow.fxml"));
         Parent root = null;
         try {
@@ -101,6 +101,7 @@ public class Main extends Application implements WebSocketEvents, ApplicationEve
 
         webSocketController.registerWebSocketEvents(this);
         webSocketController.connect();
+        System.err.println("Connected to server via WebSocketClient");
     }
 
 

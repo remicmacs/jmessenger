@@ -217,6 +217,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents {
 
         // We add the message and set the scrolling to the bottom
         Message receivedMessage = gson.fromJson(message, Message.class);
+        // Temporary dump
+        System.err.println(message);
         messages.add(receivedMessage);
         room.appendMessage(receivedMessage);
         messagesList.scrollTo(messages.size());

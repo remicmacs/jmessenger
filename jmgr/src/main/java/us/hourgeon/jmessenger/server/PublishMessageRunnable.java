@@ -20,6 +20,8 @@ import java.time.ZonedDateTime;
 public class PublishMessageRunnable implements Runnable {
     private final Message message;
     private final ChatServer chatServerInstance;
+    final private Gson gson = new GsonBuilder().registerTypeAdapter(
+            ZonedDateTime.class, new ZDTSerializerDeserializer()).create();
 
     public PublishMessageRunnable(Message message, ChatServer chatServerInstance) {
         this.message = message;
@@ -28,6 +30,17 @@ public class PublishMessageRunnable implements Runnable {
 
     @Override
     public void run() {
+        System.err.println("Launch publish standard message");
+
+        if (this.message.getDestinationUUID().equals(this.chatServerInstance.getGeneralChannel().getChannelId())) {
+            this.broadcastMessageToGeneral();
+        } else {
+            this.publishMessage();
+        }
+
+    }
+
+    private void publishMessage() {
         Channel theChannel = null;
 
         for(Channel aChannel : this.chatServerInstance.getOpenChannels()) {
@@ -41,12 +54,19 @@ public class PublishMessageRunnable implements Runnable {
             for(WebSocket currentConnection :
                     this.chatServerInstance.getConnections()) {
                 User attachedUser = currentConnection.getAttachment();
-                Gson gson = new GsonBuilder().registerTypeAdapter(
-                        ZonedDateTime.class, new ZDTSerializerDeserializer()).create();
                 if (theChannel.getSubscribers().contains(attachedUser)) {
-                    currentConnection.send(gson.toJson(message, Message.class));
+                    currentConnection.send(this.gson.toJson(message,
+                            Message.class));
+
+                    System.err.println("Standard message sent");
                 }
             }
         }
+    }
+
+    private void broadcastMessageToGeneral() {
+        this.chatServerInstance.broadcast(this.gson.toJson(message,
+                Message.class));
+        System.err.println("Message posted in shoutbox for all to see");
     }
 }

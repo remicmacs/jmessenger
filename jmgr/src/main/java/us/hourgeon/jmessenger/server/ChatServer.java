@@ -8,10 +8,12 @@ import us.hourgeon.jmessenger.Model.*;
 
 import java.net.InetSocketAddress;
 import java.time.ZonedDateTime;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * Websocket server implementation for chat use case.
@@ -26,19 +28,23 @@ public class ChatServer extends WebSocketServer {
     /**
      * Service used to execute tasks spawned by the server.
      */
-    private ExecutorService executor;
+    private final ExecutorService executor;
 
-    private int serverPortNumber = 38887;
+    private final int serverPortNumber;
 
-    private CopyOnWriteArraySet<Channel> openChannels =
+    private final CopyOnWriteArraySet<Channel> openChannels =
             new CopyOnWriteArraySet<>();
 
-    private CopyOnWriteArraySet<User> connectedUsers =
-            new CopyOnWriteArraySet<>();
+    private final PublicChannel generalChannel;
 
-    final private PublicChannel generalChannel;
+    private final AdminChannel adminChannel = new AdminChannel();
 
-    final private AdminChannel adminChannel = new AdminChannel();
+    // Need a GsonBuilder ad hoc since Message uses ZonedDateTime
+    // and it is not properly (de)serialized natively.
+    private final Gson gson = new GsonBuilder().registerTypeAdapter(
+            ZonedDateTime.class, new ZDTSerializerDeserializer()).create();
+
+
 
     /**
      * Constructor
@@ -75,6 +81,7 @@ public class ChatServer extends WebSocketServer {
         this.executor = Executors.newCachedThreadPool();
         UUID generalChannelUUID= UUID.randomUUID();
         PublicChannel generalChannel = new PublicChannel(generalChannelUUID);
+        this.openChannels.add(this.adminChannel);
         this.openChannels.add(generalChannel);
         this.generalChannel = generalChannel;
     }
@@ -86,6 +93,7 @@ public class ChatServer extends WebSocketServer {
         this.executor = executor;
         UUID generalChannelUUID= UUID.randomUUID();
         PublicChannel generalChannel = new PublicChannel(generalChannelUUID);
+        this.openChannels.add(this.adminChannel);
         this.openChannels.add(generalChannel);
         this.generalChannel = generalChannel;
     }
@@ -100,33 +108,40 @@ public class ChatServer extends WebSocketServer {
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
 
-        // Attaching information to websocket connection
+        // Creating new User and
+        // Attaching its information to websocket connection
         UUID newUUID = UUID.randomUUID();
         String newTemporaryNickname = "User#" + newUUID;
         User newUser = new User(newTemporaryNickname, newUUID);
         conn.setAttachment(newUser);
-
-        //This method sends a message to the new client only
-        conn.send("Welcome to the server!");
-        //This method sends a message to all clients connected
-        broadcast( "new connection: " + handshake.getResourceDescriptor() );
-        System.out.println(
-                conn.getRemoteSocketAddress()
-                        .getAddress()
-                        .getHostAddress()
-                        + " entered the room!"
-        );
-
-        String test = "New user is called \"" + newUser.getNickName() + "\"\n";
-        broadcast(test);
-        System.out.println(test);
-
 
         // All users are subscribed to general and admin channel.
         // General channel is the shoutbox
         // Admin channel is a hidden channel for all commands messages
         this.generalChannel.subscribeUser(newUser);
         this.adminChannel.subscribeUser(newUser);
+
+        Message welcomeMessage = new Message(
+                newUser.getUuid(),
+                new UUID(0,0),
+                "Welcome to the server!",
+                ZonedDateTime.now()
+        );
+
+        this.executor.execute(new PublishMessageRunnable(welcomeMessage, this));
+
+        Message newUserMessage = new Message(
+                newUser.getUuid(),
+                new UUID(0,0),
+                "new connection: " + handshake.getResourceDescriptor(),
+                ZonedDateTime.now()
+        );
+        this.executor.execute(new PublishMessageRunnable(newUserMessage, this));
+
+        System.out.println(
+                "onOpen: " + newUser.getNickName()
+                        + " just arrived on the server"
+        );
     }
 
     /**
@@ -140,7 +155,16 @@ public class ChatServer extends WebSocketServer {
      */
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        broadcast( conn + " has left the room!" );
+        User quittingUser = conn.getAttachment();
+        Message closeMessage = new Message(
+            quittingUser.getUuid(),
+            new UUID(0,0),
+            conn + " has left the room!",
+            ZonedDateTime.now()
+        );
+        broadcast( this.gson.toJson(closeMessage, Message.class));
+
+        this.getConnectedUsers().remove(quittingUser);
         System.out.println( conn + " has left the room!" );
 
     }
@@ -156,15 +180,17 @@ public class ChatServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, String message) {
         // Receive a Message
-        // Need a GsonBuilder ad hoc since Message uses ZonedDateTime
-        // and it is not properly (de)serialized natively.
-        Gson gson = new GsonBuilder().registerTypeAdapter(
-                ZonedDateTime.class, new ZDTSerializerDeserializer()).create();
-        Message inMessage = gson.fromJson(message, Message.class);
+        Message inMessage = this.gson.fromJson(message, Message.class);
 
 
         if (inMessage.getDestinationUUID().equals(this.adminChannel.getChannelId())) {
-            this.executor.execute(new AdminCommandRunnable(inMessage.getPayload(), this));
+            this.executor.execute(
+                new AdminCommandRunnable(
+                    inMessage,
+                    this,
+                    conn.getAttachment()
+                )
+            );
         } else {
             // For now messages are modified on arrival because client is not
             // yet aware of UUIDs attributed to channels
@@ -201,11 +227,21 @@ public class ChatServer extends WebSocketServer {
         setConnectionLostTimeout(100);
     }
 
-    public void addChannel(Channel newChannel) {
+    void addChannel(Channel newChannel) {
         this.openChannels.add(newChannel);
     }
 
-    public CopyOnWriteArraySet<Channel> getOpenChannels() {
+    CopyOnWriteArraySet<Channel> getOpenChannels() {
         return this.openChannels;
+    }
+
+    Set<User> getConnectedUsers() {
+        return this.getConnections().stream()
+                .map(obj -> (User) obj.getAttachment())
+                .collect(Collectors.toSet());
+    }
+
+    PublicChannel getGeneralChannel() {
+        return this.generalChannel;
     }
 }
