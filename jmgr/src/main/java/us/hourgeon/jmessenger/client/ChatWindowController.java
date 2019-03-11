@@ -77,6 +77,10 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         // TODO: USER HERE ! TO REPLACE !
         me = new User("me", UUID.randomUUID());
 
+        // Set placeholder before initializing the lists
+        showLoading();
+        lockAll();
+
         // We set the content first before setting the look
         roomsList.setItems(rooms);
         conversationsList.setItems(conversations);
@@ -122,22 +126,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             messages.setAll(room.getHistory().getMessages());
         });
 
-        // Fill the lists with fake data
-        for (int i = 0; i < 7; i++) {
-            participants.add(new User("Contact " + i, UUID.randomUUID()));
-
-            conversations.add(new DirectMessageChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
-            rooms.add(new PublicChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
-            rooms.add(new PrivateChannel(UUID.randomUUID(),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    Collections.emptySortedSet()));
-        }
-
-        // Default setting on start
-        roomsList.getSelectionModel().select(0);
-
         // Configure the chat entry field to send the messages
         chatEntryField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER && !event.isShiftDown()) {
@@ -154,7 +142,96 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         addConvoButton.setOnAction(value -> openAddChannelDialog(true));
         inviteButton.setOnAction(value -> openInviteDialog());
         testButton.setOnAction(value -> sendTestMessage());
+
+        initializeLists();
     }
+
+
+    private void initializeLists() {
+        // Fill the lists with fake data
+        for (int i = 0; i < 7; i++) {
+            participants.add(new User("Contact " + i, UUID.randomUUID()));
+
+            //conversations.add(new DirectMessageChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
+            rooms.add(new PublicChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
+            rooms.add(new PrivateChannel(UUID.randomUUID(),
+                    Collections.emptyList(),
+                    Collections.emptyList(),
+                    Collections.emptyList(),
+                    Collections.emptySortedSet()));
+        }
+
+        // Default setting on start
+        roomsList.getSelectionModel().select(0);
+        roomsList.setPlaceholder(new Label(""));
+
+        showLoaded();
+    }
+
+
+    private void lockMessages() {
+        chatEntryField.setDisable(true);
+        chatEntrySendButton.setDisable(true);
+        //messagesList.setDisable(true);
+    }
+
+
+    private void unlockMessages() {
+        chatEntryField.setDisable(false);
+        chatEntrySendButton.setDisable(false);
+        //messagesList.setDisable(false);
+    }
+
+
+    private void lockChannels() {
+        addConvoButton.setDisable(true);
+        addRoomButton.setDisable(true);
+        //roomsList.setDisable(true);
+        //conversationsList.setDisable(true);
+    }
+
+
+    private void unlockChannels() {
+        addConvoButton.setDisable(false);
+        addRoomButton.setDisable(false);
+        //roomsList.setDisable(false);
+        //conversationsList.setDisable(false);
+    }
+
+
+    private void lockAll() {
+        inviteButton.setDisable(true);
+        lockChannels();
+        lockMessages();
+    }
+
+
+    private void unlockAll() {
+        inviteButton.setDisable(false);
+        unlockChannels();
+        unlockMessages();
+    }
+
+
+    private void showLoading() {
+        roomsList.setPlaceholder(new Label("Loading..."));
+        conversationsList.setPlaceholder(new Label("Loading..."));
+        contactsList.setPlaceholder(new Label("Loading..."));
+        messagesList.setPlaceholder(new Label("Loading..."));
+
+        lockAll();
+    }
+
+
+    private void showLoaded() {
+        roomsList.setPlaceholder(new Label("No channel added yet"));
+        conversationsList.setPlaceholder(new Label("No channel added yet"));
+        contactsList.setPlaceholder(new Label("No contacts in this channel"));
+        messagesList.setPlaceholder(new Label("Welcome to this channel. Start chatting to see the messages displayed here"));
+
+        unlockAll();
+    }
+
 
     private void sendTestMessage() {
         UUID adminChannelUUID = new UUID(0,0);

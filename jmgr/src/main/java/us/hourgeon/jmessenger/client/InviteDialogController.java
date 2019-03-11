@@ -4,6 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.VBox;
@@ -32,6 +33,8 @@ public class InviteDialogController {
         usersList.setItems(users);
         usersList.setCellFactory(new ContactCellFactory(events, false));
         usersList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        usersList.setPlaceholder(new Label("Loading..."));
+
         for (int i=0; i < 10; i++) {
             User newUser = new User("User " + i, UUID.randomUUID());
             users.add(newUser);

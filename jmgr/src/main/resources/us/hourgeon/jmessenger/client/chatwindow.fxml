@@ -40,7 +40,7 @@
     <VBox spacing="10">
         <VBox VBox.vgrow="ALWAYS">
 
-            <Label fx:id="roomLabel">Room something</Label>
+            <Label fx:id="roomLabel"/>
 
             <ListView fx:id="messagesList"
                       VBox.vgrow="ALWAYS"

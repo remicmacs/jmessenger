@@ -12,7 +12,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public class Main extends Application
-        implements WebSocketEvents, ApplicationEvents {
+        implements WebSocketEvents, ApplicationEvents, MessageEvents {
 
     private Stage stage;
     private WebSocketController webSocketController;
@@ -100,6 +100,7 @@ public class Main extends Application
         webSocketController = new WebSocketController(serverURI);
 
         webSocketController.registerWebSocketEvents(this);
+        webSocketController.registerMessageEvents(this);
         webSocketController.connect();
         System.err.println("Connected to server via WebSocketClient");
     }
@@ -123,5 +124,15 @@ public class Main extends Application
         if (webSocketController != null) {
             webSocketController.close(1000, "Quitting application");
         }
+    }
+
+    @Override
+    public void onMessage(String message) {
+        // This should help catch the first messages, but we have to make more tests
+        // it could be because of the runLater() invoked in the WebSocketController
+        // and the check for a null MessageEvents. If not null, the call will be made
+        // on the next iteration of the JavaFX thread. Since then, the chatwindow will
+        // be loaded and the MessageEvents of WebSocketController will be set to
+        // the ChatWindow.
     }
 }
