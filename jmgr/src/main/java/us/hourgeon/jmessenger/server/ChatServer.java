@@ -38,8 +38,6 @@ public class ChatServer extends WebSocketServer {
 
     private final PublicChannel generalChannel;
 
-    private final AdminChannel adminChannel = new AdminChannel();
-
     // Need a GsonBuilder ad hoc since Message uses ZonedDateTime
     // and it is not properly (de)serialized natively.
     private final Gson gson = new GsonBuilder().registerTypeAdapter(
@@ -82,7 +80,6 @@ public class ChatServer extends WebSocketServer {
         this.executor = Executors.newCachedThreadPool();
         UUID generalChannelUUID= UUID.randomUUID();
         PublicChannel generalChannel = new PublicChannel(generalChannelUUID);
-        this.openChannels.add(this.adminChannel);
         this.openChannels.add(generalChannel);
         this.generalChannel = generalChannel;
     }
@@ -94,7 +91,6 @@ public class ChatServer extends WebSocketServer {
         this.executor = executor;
         UUID generalChannelUUID= UUID.randomUUID();
         PublicChannel generalChannel = new PublicChannel(generalChannelUUID);
-        this.openChannels.add(this.adminChannel);
         this.openChannels.add(generalChannel);
         this.generalChannel = generalChannel;
     }
@@ -120,7 +116,6 @@ public class ChatServer extends WebSocketServer {
         // General channel is the shoutbox
         // Admin channel is a hidden channel for all commands messages
         this.generalChannel.subscribeUser(newUser);
-        this.adminChannel.subscribeUser(newUser);
 
         // On connect, user does not send a "proper" message, so we build one
         AdminCommand connectAdminCommand = new AdminCommand(
@@ -192,8 +187,8 @@ public class ChatServer extends WebSocketServer {
         // Receive a Message
         Message inMessage = this.gson.fromJson(message, Message.class);
 
-
-        if (inMessage.getDestinationUUID().equals(this.adminChannel.getChannelId())) {
+        // All messages with 0x0 destination UUID are admin messages
+        if (inMessage.getDestinationUUID().equals(new UUID(0,0))) {
             this.executor.execute(
                 new AdminCommandRunnable(
                     inMessage,
