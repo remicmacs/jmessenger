@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<messages channelUUID="98f6960f-7725-4e71-9552-71acfbc9e1b4">
+<message authorUUID="e50ac7b9-9875-4de8-b084-1010899cae7d" timestamp="2019-03-12T10:51:46.692+01:00[Europe/Paris]">test</message>
+<message authorUUID="e50ac7b9-9875-4de8-b084-1010899cae7d" timestamp="2019-03-12T10:51:48.353+01:00[Europe/Paris]">dans un salon</message>
+<message authorUUID="e50ac7b9-9875-4de8-b084-1010899cae7d" timestamp="2019-03-12T10:52:02.714+01:00[Europe/Paris]">avec l'uuid du salon en attribut du root</message>
+<message authorUUID="e50ac7b9-9875-4de8-b084-1010899cae7d" timestamp="2019-03-12T10:52:07.949+01:00[Europe/Paris]">avec un passage</message>
+<message authorUUID="e50ac7b9-9875-4de8-b084-1010899cae7d" timestamp="2019-03-12T10:52:16.543+01:00[Europe/Paris]">je reprend, un passage
+à la ligne</message>
+</messages>
