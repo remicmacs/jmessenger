@@ -14,6 +14,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import us.hourgeon.jmessenger.AdminCommand;
 import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellFactory;
 import us.hourgeon.jmessenger.client.ContactCell.ContactCellFactory;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
@@ -59,7 +60,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
     private WebSocketController webSocketController;
 
-    private User me;
+    private User me = new User("me", new UUID(0,0));
 
     private static final Gson gson =
             new GsonBuilder().registerTypeAdapter(
@@ -232,13 +233,16 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
     private void sendTestMessage() {
         UUID adminChannelUUID = new UUID(0,0);
-        String adminCommand = "Create Channel Toto";
+        String adminCommand = gson.toJson(
+            new AdminCommand("USERLIST",""),
+            AdminCommand.class
+        );
 
         Message adminMessageTest = new Message(
-                this.me.getUuid(),
-                adminChannelUUID,
-                adminCommand,
-                ZonedDateTime.now()
+            this.me.getUuid(),
+            adminChannelUUID,
+            adminCommand,
+            ZonedDateTime.now()
         );
 
         String toSend = gson.toJson(adminMessageTest, Message.class);
@@ -284,20 +288,26 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
      */
     @Override
     public void onMessage(String message) {
+        System.err.println("In ChatWindowController: " + message);
+
         AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
-        // We add the message and set the scrolling to the bottom
+        // Deserializing message
         Message receivedMessage = gson.fromJson(message, Message.class);
-        // Temporary dump
-        System.err.println(message);
 
         // Check for admin message, else we'll guess it's a message
         if (receivedMessage.getDestinationUUID().equals(adminChannelUUID)) {
 
+            // Admin Message recieved, inflating payload into AdminCommand
+            AdminCommand payload = gson.fromJson(
+                receivedMessage.getPayload(),
+                AdminCommand.class
+            );
+
             // If we receive the new connection message, the author UUID is the
             // client UUID given by the server. We can then initialize the user
             // and proceed with the rest of the session initialization
-            if (receivedMessage.getPayload().equals("new connection: /")) {
+            if (payload.getType().equals(AdminCommand.CommandType.CONNECT)) {
                 me = new User("me", receivedMessage.getAuthorUUID());
                 initializeLists();
             }
@@ -316,6 +326,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                     System.out.println("Channel found in conversations !");
                 }
             }
+
+            // Add the message and set the scrolling to the bottom
             messages.add(receivedMessage);
             room.appendMessage(receivedMessage);
             messagesList.scrollTo(messages.size());

@@ -4,6 +4,7 @@ import com.google.gson.*;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import us.hourgeon.jmessenger.AdminCommand;
 import us.hourgeon.jmessenger.Model.*;
 
 import java.net.InetSocketAddress;
@@ -121,26 +122,35 @@ public class ChatServer extends WebSocketServer {
         this.generalChannel.subscribeUser(newUser);
         this.adminChannel.subscribeUser(newUser);
 
-        Message welcomeMessage = new Message(
-                newUser.getUuid(),
-                new UUID(0,0),
-                "Welcome to the server!",
-                ZonedDateTime.now()
+        // On connect, user does not send a "proper" message, so we build one
+        AdminCommand connectAdminCommand = new AdminCommand(
+            "CONNECT",
+            ""
         );
-
-        this.executor.execute(new PublishMessageRunnable(welcomeMessage, this));
-
+        String adminMessagePayload = this.gson.toJson(
+            connectAdminCommand,
+            AdminCommand.class
+        );
         Message newUserMessage = new Message(
-                newUser.getUuid(),
-                new UUID(0,0),
-                "new connection: " + handshake.getResourceDescriptor(),
-                ZonedDateTime.now()
+            newUser.getUuid(),
+            new UUID(0, 0),
+            adminMessagePayload,
+            ZonedDateTime.now()
         );
-        this.executor.execute(new PublishMessageRunnable(newUserMessage, this));
+
+        // Executing admin command "CONNECT" == sending the new user its UUID
+        this.executor.execute(
+            new AdminCommandRunnable(
+                newUserMessage,
+                this,
+                conn.getAttachment()
+            )
+        );
 
         System.out.println(
-                "onOpen: " + newUser.getNickName()
-                        + " just arrived on the server"
+                "onOpen: "
+                    + newUser.getNickName()
+                    + " just arrived on the server"
         );
     }
 

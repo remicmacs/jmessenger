@@ -10,28 +10,33 @@ public abstract class AbstractChannel implements Channel {
     /**
      * Users currently listening to the Channel.
      */
-    protected final CopyOnWriteArraySet<User> subscribers;
+    final CopyOnWriteArraySet<User> subscribers;
 
     /**
      * Messages history ordered by creation time
      */
-    protected final ConcurrentSkipListSet<Message> history;
+    final ConcurrentSkipListSet<Message> history;
 
     /**
      * UUID for Channel object
      *
      * Database primary key.
      */
-    protected final UUID uuid;
+    final UUID uuid;
 
-    protected final String alias;
+    /**
+     * Alias name for the Channel
+     *
+     * Allows better memorization of channel reference for human weaklings
+     */
+    private final String alias;
 
     /**
      * Constructor
      * @param uuid {@link AbstractChannel#uuid}
      * @param initialSubscribers {@link AbstractChannel#subscribers}
      * @param history {@link AbstractChannel#history}
-     * @param alias
+     * @param alias {@link AbstractChannel#alias}
      */
     AbstractChannel(
             UUID uuid, Collection<User> initialSubscribers,
@@ -68,7 +73,7 @@ public abstract class AbstractChannel implements Channel {
 
     @Override
     public CopyOnWriteArraySet<User> getSubscribers() {
-        return new CopyOnWriteArraySet<User>(this.subscribers);
+        return new CopyOnWriteArraySet<>(this.subscribers);
     }
 
     public void subscribeUser(User newSubscriber) {
