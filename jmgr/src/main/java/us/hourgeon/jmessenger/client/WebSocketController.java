@@ -68,8 +68,7 @@ public class WebSocketController extends WebSocketClient {
 
     @Override
     public void onError(Exception ex) {
-        ex.printStackTrace();
-        // if the error is fatal then onClose will be called additionally
+        Platform.runLater(() -> events.onError(ex));
     }
 
     void registerWebSocketEvents(WebSocketEvents events) {

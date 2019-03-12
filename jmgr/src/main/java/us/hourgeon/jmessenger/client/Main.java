@@ -4,18 +4,21 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 
 public class Main extends Application
         implements WebSocketEvents, ApplicationEvents, MessageEvents {
 
     private Stage stage;
     private WebSocketController webSocketController;
+    private FXMLLoader loader;
 
 
     /**
@@ -27,7 +30,7 @@ public class Main extends Application
     public void start(Stage passedStage) throws Exception {
         stage = passedStage;
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("connectwindow.fxml"));
+        loader = new FXMLLoader(getClass().getResource("connectwindow.fxml"));
         Parent root = loader.load();
         ConnectWindowController controller = loader.getController();
 
@@ -58,7 +61,7 @@ public class Main extends Application
      */
     @Override
     public void onOpen(ServerHandshake handshakedata, WebSocketController webSocketController) {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("chatwindow.fxml"));
+        loader = new FXMLLoader(getClass().getResource("chatwindow.fxml"));
         Parent root = null;
         try {
             root = loader.load();
@@ -82,6 +85,26 @@ public class Main extends Application
     @Override
     public void onClose(int code, String reason, boolean remote) {
 
+    }
+
+    @Override
+    public void onError(Exception ex) {
+        ((ConnectWindowController)loader.getController()).deselectConnectButton();
+
+        // Alert dialog to inform of bad URI format
+        Alert alertDialog = new Alert(Alert.AlertType.ERROR);
+        alertDialog.setTitle("Connection Error");
+        String header = "Error when connecting to the server";
+        alertDialog.setHeaderText(header);
+        alertDialog.setResizable(true);
+
+        String content =
+                ex.getMessage() +
+                        "\n" +
+                        Arrays.toString(ex.getStackTrace());
+
+        alertDialog.setContentText(content);
+        alertDialog.showAndWait();
     }
 
 

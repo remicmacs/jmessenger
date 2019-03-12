@@ -57,6 +57,9 @@ public class ConnectWindowController {
         });
     }
 
+    public void deselectConnectButton() {
+        connectButton.setSelected(false);
+    }
 
     /**
      * Set the application events listener
