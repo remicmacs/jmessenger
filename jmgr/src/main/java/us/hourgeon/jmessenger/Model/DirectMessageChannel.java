@@ -1,6 +1,5 @@
 package us.hourgeon.jmessenger.Model;
 
-
 import java.util.Collection;
 import java.util.SortedSet;
 import java.util.UUID;
@@ -18,5 +17,5 @@ public class DirectMessageChannel extends AbstractChannel {
             Collection<User> initialSubscribers,
             SortedSet<Message> history
     ) {
-        super(uuid, initialSubscribers, history); }
+        super(uuid, initialSubscribers, history, "DMChannel#"+uuid); }
 }

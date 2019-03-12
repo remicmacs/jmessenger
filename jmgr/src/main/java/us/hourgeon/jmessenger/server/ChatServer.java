@@ -9,8 +9,7 @@ import us.hourgeon.jmessenger.Model.*;
 
 import java.net.InetSocketAddress;
 import java.time.ZonedDateTime;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -85,7 +84,6 @@ public class ChatServer extends WebSocketServer {
     }
 
     public ChatServer( int port, ExecutorService executor) {
-        // TODO: check port value (not negative, not in well-known ports, etc)
         super( new InetSocketAddress( port ) );
         this.serverPortNumber = port;
         this.executor = executor;
@@ -116,6 +114,18 @@ public class ChatServer extends WebSocketServer {
         // General channel is the shoutbox
         // Admin channel is a hidden channel for all commands messages
         this.generalChannel.subscribeUser(newUser);
+
+        // TODO: remove temporary block when done with tests
+        // Temporary : create test channel attached to new user
+        ArrayList<User> users = new ArrayList<>();
+        users.add(newUser);
+
+        this.addChannel(new PrivateChannel(UUID.randomUUID(),
+                users, users, users, Collections.emptySortedSet()));
+
+        this.addChannel(new DirectMessageChannel(UUID.randomUUID(), users,
+                Collections.emptySortedSet()));
+        // End of temporary block
 
         // On connect, user does not send a "proper" message, so we build one
         AdminCommand connectAdminCommand = new AdminCommand(
@@ -230,6 +240,17 @@ public class ChatServer extends WebSocketServer {
         );
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
+
+        // TODO: remove temporary test private and dm channels
+        // Add temporary private Channel and DMChannel with nobody in it
+        this.addChannel(new PrivateChannel(UUID.randomUUID(),
+                Collections.emptySet(), Collections.emptySet(),
+                Collections.emptySet(), Collections.emptySortedSet()));
+
+        this.addChannel(new DirectMessageChannel(UUID.randomUUID(),
+                Collections.emptySet(), Collections.emptySortedSet()));
+
+        // End of temporary block
     }
 
     void addChannel(Channel newChannel) {

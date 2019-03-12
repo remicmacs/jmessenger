@@ -32,9 +32,17 @@ public class PrivateChannel extends AbstractChannel {
             Collection<User> initialAdministrators,
             SortedSet<Message> history
     ) {
-        super(uuid, initialSubscribers, history);
+        super(uuid, initialSubscribers, history, "PrivateChannel#"+uuid);
         this.authorizedUsers =
                 new CopyOnWriteArraySet<>(initialAuthorizedUsers);
         this.administrators = new CopyOnWriteArraySet<>(initialAdministrators);
+    }
+
+    public CopyOnWriteArraySet<User> getAuthorizedUsers() {
+        return this.authorizedUsers;
+    }
+
+    public CopyOnWriteArraySet<User> getAdministrators() {
+        return this.administrators;
     }
 }

@@ -234,7 +234,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     private void sendTestMessage() {
         UUID adminChannelUUID = new UUID(0,0);
         String adminCommand = gson.toJson(
-            new AdminCommand("USERLIST",""),
+            new AdminCommand("CHANNELLIST",""),
             AdminCommand.class
         );
 
