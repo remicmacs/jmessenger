@@ -4,14 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.java_websocket.WebSocket;
 import us.hourgeon.jmessenger.AdminCommand;
-import us.hourgeon.jmessenger.Model.Message;
-import us.hourgeon.jmessenger.Model.User;
-import us.hourgeon.jmessenger.Model.ZDTSerializerDeserializer;
+import us.hourgeon.jmessenger.Model.*;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 /**
  * Command Administration runnable
@@ -120,9 +121,10 @@ public class AdminCommandRunnable implements Runnable {
         );
 
         // Command management
+        String payload;
         switch (receivedAdminCommand.getType()) {
             case USERLIST:
-                String payload = gson.toJson(this.getConnectedUsers());
+                payload = gson.toJson(this.getConnectedUsers());
                 createResponseMessage("USERLIST", payload);
                 break;
             case CONNECT:
@@ -130,12 +132,15 @@ public class AdminCommandRunnable implements Runnable {
                 break;
             case BANUSERS:
             case CHANNELLIST:
+                payload = gson.toJson(this.getOpenChannels());
+                createResponseMessage("CHANNELLIST", payload);
+                break;
             case INVITEUSERS:
             case CREATECHANNEL:
             case CHANGENICKNAME:
             default:
-                createResponseMessage("ERROR",
-                        "How the fuck did you get here ?");
+                payload = "How the fuck did you get here ?";
+                createResponseMessage("ERROR", payload);
                 break;
         }
 
@@ -167,6 +172,53 @@ public class AdminCommandRunnable implements Runnable {
     // other thread ?
     private List <User> getConnectedUsers() {
         return new ArrayList<>(this.serverInstance.getConnectedUsers());
+    }
+
+    // Construct a list of Channels accessible by the user who requested it
+    private List<Channel> getOpenChannels() {
+
+        // Recovering list of channel
+        CopyOnWriteArraySet<Channel> channelList =
+            this.serverInstance.getOpenChannels();
+
+        return channelList.stream()
+            // Make it a Channel stream
+            .map(obj -> (Channel) obj)
+            // Filter out Channel forbidden to user
+            .filter(aChannel -> (aChannel instanceof PublicChannel) ||
+                (aChannel instanceof PrivateChannel &&
+                    ((PrivateChannel) aChannel)
+                        .getAuthorizedUsers().contains(this.sender)
+                ) || (aChannel instanceof DirectMessageChannel &&
+                    aChannel.getSubscribers().contains(this.sender)
+                )
+            )
+            // Recreate Channel list without history to minimize network load
+            .map(aChannel -> {
+            Channel newCurrentChannel;
+            if (aChannel instanceof PublicChannel) {
+                newCurrentChannel = new PublicChannel(
+                    aChannel.getChannelId(),
+                    aChannel.getSubscribers(),
+                    Collections.emptySortedSet()
+                );
+            } else if (aChannel instanceof PrivateChannel) {
+                newCurrentChannel = new PrivateChannel(
+                    aChannel.getChannelId(),
+                    aChannel.getSubscribers(),
+                    ((PrivateChannel) aChannel).getAuthorizedUsers(),
+                    ((PrivateChannel) aChannel).getAdministrators(),
+                    Collections.emptySortedSet()
+                );
+            } else { // aChannel instanceof DirectMessageChannel
+                newCurrentChannel = new DirectMessageChannel(
+                    aChannel.getChannelId(),
+                    aChannel.getSubscribers(),
+                    Collections.emptySortedSet()
+                );
+            }
+            return newCurrentChannel;
+        }).collect(Collectors.toList());
     }
 
 }
