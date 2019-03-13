@@ -7,10 +7,7 @@ import us.hourgeon.jmessenger.AdminCommand;
 import us.hourgeon.jmessenger.Model.*;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
@@ -55,6 +52,8 @@ public class AdminCommandRunnable implements Runnable {
      */
     private Message response = null;
 
+    private AdminCommand adminCommand = null;
+
     /**
      * Constructor
      * @param adminMessage {@link AdminCommandRunnable#adminMessage}
@@ -91,6 +90,9 @@ public class AdminCommandRunnable implements Runnable {
         }
     }
 
+    /**
+     * Find the Websocket connection to the caller
+     */
     // TODO: see if it's possible to do this with a Callable and a Future thingy
     private void findUserWebsocket() {
         // Finding websocket connection to sender
@@ -115,35 +117,79 @@ public class AdminCommandRunnable implements Runnable {
      */
     private void decodeAdminMessage() {
         // Deserialize AdminCommand
-        AdminCommand receivedAdminCommand = gson.fromJson(
+        this.adminCommand = gson.fromJson(
             this.adminMessage.getPayload(),
             AdminCommand.class
         );
 
         // Command management
-        String payload;
-        switch (receivedAdminCommand.getType()) {
+        String payload = "";
+        String type;
+        switch (this.adminCommand.getType()) {
             case USERLIST:
                 payload = gson.toJson(this.getConnectedUsers());
-                createResponseMessage("USERLIST", payload);
+                type ="USERLIST";
                 break;
             case CONNECT:
-                createResponseMessage("CONNECT", "");
+                type = "CONNECT";
                 break;
-            case BANUSERS:
             case CHANNELLIST:
                 payload = gson.toJson(this.getOpenChannels());
-                createResponseMessage("CHANNELLIST", payload);
+                type = "CHANNELLIST";
+                break;
+            case CREATECHANNEL:
+                Channel newChannel = this.createChannel();
+                payload = gson.toJson(newChannel, Channel.class);
+                type = "CREATECHANNEL";
                 break;
             case INVITEUSERS:
-            case CREATECHANNEL:
+            case BANUSERS:
             case CHANGENICKNAME:
             default:
-                payload = "How the fuck did you get here ?";
-                createResponseMessage("ERROR", payload);
+                type = "ERROR";
+                payload = "NOT IMPLEMENTED";
                 break;
         }
 
+        createResponseMessage(type, payload);
+
+    }
+
+    /**
+     * Create a new channel
+     *
+     * @return the newly created Channel
+     */
+    private Channel createChannel() {
+
+        // Unpack CreateChannelRequest
+        String payload = this.adminCommand.getCommandPayload();
+        CreateChannelRequest ccr = gson.fromJson(
+                payload,
+                CreateChannelRequest.class
+        );
+
+        // Create the channel accordingly
+        Channel serverChannel;
+        if (!ccr.isPrivate() && !ccr.isDirect()) {
+            String alias = ccr.getAlias();
+            Collection<User> initSubs = ccr.getInitSubscribers();
+            serverChannel = new PublicChannel(UUID.randomUUID(),
+                initSubs, Collections.emptySortedSet(),
+                alias
+            );
+        } else if (ccr.isPrivate()) {
+            // TODO: change placeholder code
+            serverChannel = new PublicChannel(UUID.randomUUID(),
+                    ccr.getInitSubscribers(), Collections.emptySortedSet(),
+                    ccr.getAlias());
+        } else { // newChannel instanceof DirectMessageChannel
+            // TODO: check if DM channel does not exist yet
+            serverChannel = new PublicChannel(UUID.randomUUID(),
+                    ccr.getInitSubscribers(), Collections.emptySortedSet(),
+                    ccr.getAlias());
+        }
+        return serverChannel;
     }
 
     /**

@@ -53,7 +53,7 @@ public class ChatServer extends WebSocketServer {
      *
      * Executor service instantiated is a CachedThreadPool
      */
-    public ChatServer() {
+    ChatServer() {
         this(38887, Executors.newCachedThreadPool());
     }
 
@@ -73,24 +73,24 @@ public class ChatServer extends WebSocketServer {
      *
      * @param address
      */
-    public ChatServer( InetSocketAddress address ) {
+    private ChatServer(InetSocketAddress address, ExecutorService executor) {
         super( address );
         this.serverPortNumber = address.getPort();
-        this.executor = Executors.newCachedThreadPool();
+        this.executor = executor;
         UUID generalChannelUUID= UUID.randomUUID();
-        PublicChannel generalChannel = new PublicChannel(generalChannelUUID);
+        PublicChannel generalChannel = new PublicChannel(generalChannelUUID,
+                "General");
         this.openChannels.add(generalChannel);
         this.generalChannel = generalChannel;
     }
 
-    public ChatServer( int port, ExecutorService executor) {
-        super( new InetSocketAddress( port ) );
-        this.serverPortNumber = port;
-        this.executor = executor;
-        UUID generalChannelUUID= UUID.randomUUID();
-        PublicChannel generalChannel = new PublicChannel(generalChannelUUID);
-        this.openChannels.add(generalChannel);
-        this.generalChannel = generalChannel;
+    /**
+     * Constructor taking a port and an instance of ExecutorService
+     * @param port
+     * @param executor
+     */
+    private ChatServer( int port, ExecutorService executor) {
+        this(new InetSocketAddress(port), executor);
     }
 
     /**

@@ -22,9 +22,10 @@ import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class ChatWindowController implements MessageEvents, ChannelEvents, ContactEvents {
 
@@ -397,13 +398,31 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         System.out.println("Is direct : " + isDirect);
         System.out.println("Is private : " + isPrivate);
 
+        // Initialize the list of users
+        ArrayList<User> initialUsers = new ArrayList<User>();
+        initialUsers.add(this.me);
+
+        // Create a request object
+        CreateChannelRequest ccr = new CreateChannelRequest(initialUsers,
+                name, isPrivate, isDirect);
+
+        // Serialize it
+        String adminCommandPayload = gson.toJson(ccr, CreateChannelRequest.class);
+
+        // Add it in an AdminCommand object
+        AdminCommand admCmd = new AdminCommand("CREATECHANNEL",
+                adminCommandPayload);
+
+        // Serialize it and put it in a message
         Message message = new Message(
                 this.me.getUuid(),
                 adminChannelUUID,
-                "Create Channel " + name,
+                gson.toJson(admCmd, AdminCommand.class),
                 ZonedDateTime.now()
         );
 
+        // Serialize the message and send it (phew!)
+        // (... dumbass language)
         String toSend = gson.toJson(message, Message.class);
         this.webSocketController.send(toSend);
     }

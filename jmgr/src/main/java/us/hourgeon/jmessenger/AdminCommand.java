@@ -22,7 +22,8 @@ public class AdminCommand {
         CREATECHANNEL("CREATECHANNEL"),
         CHANGENICKNAME("CHANGENICKNAME"),
         INVITEUSERS("INVITEUSERS"),
-        BANUSERS("BANUSERS");
+        BANUSERS("BANUSERS"),
+        ERROR("ERROR");
 
         private final String typeName;
 

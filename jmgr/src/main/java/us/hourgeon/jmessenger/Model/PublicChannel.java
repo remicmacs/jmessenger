@@ -16,10 +16,44 @@ public class PublicChannel extends AbstractChannel {
             UUID uuid, Collection<User> initialSubscribers,
             SortedSet<Message> history
     ) {
-        super(uuid, initialSubscribers, history);
+        this(uuid, initialSubscribers, history, "PublicChannel#"+ uuid);
     }
 
-    public PublicChannel(UUID uuid) {
-        this(uuid, Collections.emptyList(), Collections.emptySortedSet());
+    /**
+     * Constructor with an alias
+     *  @param uuid               {@link PublicChannel#uuid}
+     * @param initialSubscribers {@link PublicChannel#subscribers}
+     * @param history            {@link PublicChannel#history}
+     * @param alias             {@link AbstractChannel#alias}
+     */
+    public PublicChannel(
+        UUID uuid, Collection<User> initialSubscribers,
+        SortedSet<Message> history, String alias
+    ) {
+        super(uuid, initialSubscribers, history, alias);
+    }
+
+
+    /**
+     * Constuctor with only the UUID and the alias
+     * @param uuid {@link PublicChannel#uuid}
+     * @param alias {@link AbstractChannel#alias}
+     */
+    public PublicChannel(UUID uuid, String alias) {
+        this(uuid,
+            Collections.emptyList(),
+            Collections.emptySortedSet(),
+            alias);
+    }
+
+    /**
+     * Constructor with only the alias
+     * @param alias {@link AbstractChannel#alias}
+     */
+    public PublicChannel(String alias) {
+        this(UUID.randomUUID(),
+            Collections.emptyList(),
+            Collections.emptySortedSet(),
+            alias);
     }
 }
