@@ -14,11 +14,7 @@ jobs:
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: circleci/postgres:9.4
 
-    working_directory: ~/jmgr
-
-    branches:
-      only:
-        circleci
+    working_directory: ~/circleci/jmessenger/jmgr
 
     environment:
       # Customize the JVM maximum heap limit
@@ -39,7 +35,7 @@ jobs:
 
       - save_cache:
           paths:
-            - ~/jmgr/.gradle
+            - ~/circleci/jmessenger/jmgr
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
       # run tests!
