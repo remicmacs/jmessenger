@@ -20,6 +20,8 @@ public class Main extends Application
     private WebSocketController webSocketController;
     private FXMLLoader loader;
 
+    private ConnectWindowController connectWindowController;
+
 
     /**
      * Mandatory starting function for JavaFX
@@ -32,7 +34,7 @@ public class Main extends Application
 
         loader = new FXMLLoader(getClass().getResource("connectwindow.fxml"));
         Parent root = loader.load();
-        ConnectWindowController controller = loader.getController();
+        connectWindowController = loader.getController();
 
         stage.setTitle("JMessenger Client");
         stage.setScene(new Scene(root, 800, 600));
@@ -40,7 +42,7 @@ public class Main extends Application
 
         stage.setOnCloseRequest(event -> close());
 
-        controller.registerApplicationEvents(this);
+        connectWindowController.registerApplicationEvents(this);
     }
 
 
@@ -67,6 +69,7 @@ public class Main extends Application
             root = loader.load();
             ChatWindowController controller = loader.getController();
             controller.setWebSocketController(webSocketController);
+            controller.setNickname(connectWindowController.getNickname());
 
             stage.setTitle("JMessenger Client");
             stage.getScene().setRoot(root);

@@ -8,6 +8,7 @@ import javafx.scene.control.ToggleButton;
 
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.UUID;
 
 public class ConnectWindowController {
 
@@ -16,6 +17,9 @@ public class ConnectWindowController {
 
     @FXML
     private ToggleButton connectButton;
+
+    @FXML
+    private TextField username;
 
     private ApplicationEvents applicationEvents;
 
@@ -57,9 +61,38 @@ public class ConnectWindowController {
         });
     }
 
-    public void deselectConnectButton() {
+
+    /**
+     * A simple function do untoggle the connection button.
+     * Mainly done for the calling application to untoggle the button
+     * in case of an error during the connection
+     */
+    void deselectConnectButton() {
         connectButton.setSelected(false);
     }
+
+
+    /**
+     * Get the nickname from the TextField
+     * If the TextField is empty, the nickname will be User# + a random UUID
+     * The nickname may be stripped from forbidden characters (trailing and ending spaces)
+     * @return The nickname
+     */
+    String getNickname() {
+        // If we need to strip forbidden characters from the username,
+        // we should do it here
+
+        // We remove the trailing and ending whitespaces
+        String nickname = username.getText().trim();
+
+        // Return a random username if the field is empty
+        if (username.getText().isEmpty()) {
+            return "User#" + UUID.randomUUID().toString();
+        } else {
+            return username.getText();
+        }
+    }
+
 
     /**
      * Set the application events listener
@@ -68,4 +101,5 @@ public class ConnectWindowController {
     void registerApplicationEvents(ApplicationEvents applicationEvents) {
         this.applicationEvents = applicationEvents;
     }
+
 }

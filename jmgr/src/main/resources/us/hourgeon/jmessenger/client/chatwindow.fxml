@@ -13,7 +13,7 @@
           alignment="TOP_CENTER"
           prefWidth="300">
 
-        <Label fx:id="nickNameLabel">Username</Label>
+        <Label fx:id="nicknameLabel">Username</Label>
 
         <ScrollPane VBox.vgrow="ALWAYS"
                     hbarPolicy="NEVER">
@@ -40,7 +40,10 @@
     <VBox spacing="10">
         <VBox VBox.vgrow="ALWAYS">
 
-            <Label fx:id="roomLabel"/>
+            <HBox>
+                <Label fx:id="roomLabel"/>
+                <Button fx:id="exportXMLButton">Export to XML</Button>
+            </HBox>
 
             <ListView fx:id="messagesList"
                       VBox.vgrow="ALWAYS"

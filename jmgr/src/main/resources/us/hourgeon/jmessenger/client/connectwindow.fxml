@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -11,10 +8,12 @@
             fx:controller="us.hourgeon.jmessenger.client.ConnectWindowController"
             prefHeight="400.0" prefWidth="600.0" alignment="CENTER" spacing="10" minWidth="-Infinity" maxWidth="Infinity" minHeight="-Infinity" maxHeight="Infinity">
 
-    <HBox alignment="CENTER" spacing="10">
-        <Label>Server</Label>
-        <TextField fx:id="serverAddress" promptText="ws://localhost:38887" />
-    </HBox>
+    <GridPane alignment="CENTER" hgap="10" vgap="10">
+        <Label GridPane.rowIndex="0" GridPane.columnIndex="0">Username</Label>
+        <TextField fx:id="username" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        <Label GridPane.rowIndex="1" GridPane.columnIndex="0">Server</Label>
+        <TextField fx:id="serverAddress" promptText="ws://localhost:38887" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    </GridPane>
 
     <ToggleButton fx:id="connectButton">Connect</ToggleButton>
 
