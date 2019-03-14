@@ -32,5 +32,5 @@ jobs:
       - run: cd jmgr
       - run: pwd
       - run: ls -la
-      - run: ./gradlew clientUberJar
-      - run: ./gradlew serverUberJar
+      - run: cd jmgr && ./gradlew clientUberJar
+      - run: cd jmgr && ./gradlew serverUberJar
