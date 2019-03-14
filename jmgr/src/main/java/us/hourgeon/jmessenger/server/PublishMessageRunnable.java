@@ -6,7 +6,7 @@ import org.java_websocket.WebSocket;
 import us.hourgeon.jmessenger.Model.Channel;
 import us.hourgeon.jmessenger.Model.Message;
 import us.hourgeon.jmessenger.Model.User;
-import us.hourgeon.jmessenger.Model.ZDTSerializerDeserializer;
+import us.hourgeon.jmessenger.Model.ZDTAdapter;
 
 import java.time.ZonedDateTime;
 
@@ -21,7 +21,7 @@ public class PublishMessageRunnable implements Runnable {
     private final Message message;
     private final ChatServer chatServerInstance;
     final private Gson gson = new GsonBuilder().registerTypeAdapter(
-            ZonedDateTime.class, new ZDTSerializerDeserializer()).create();
+        ZonedDateTime.class, new ZDTAdapter()).create();
 
     public PublishMessageRunnable(Message message, ChatServer chatServerInstance) {
         this.message = message;

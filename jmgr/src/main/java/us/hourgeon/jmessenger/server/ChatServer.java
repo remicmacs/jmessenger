@@ -33,16 +33,17 @@ public class ChatServer extends WebSocketServer {
     private final int serverPortNumber;
 
     private final CopyOnWriteArraySet<Channel> openChannels =
-            new CopyOnWriteArraySet<>();
+        new CopyOnWriteArraySet<>();
 
     private final PublicRoom generalChannel;
 
     // Need a GsonBuilder ad hoc since Message uses ZonedDateTime
     // and it is not properly (de)serialized natively.
-    private final Gson gson = new GsonBuilder().registerTypeAdapter(
-            ZonedDateTime.class, new ZDTSerializerDeserializer()).create();
-
-
+    // And Channel is a generic type so a custom deserializer is needed
+    private final Gson gson = new GsonBuilder()
+        .registerTypeAdapter(ZonedDateTime.class, new ZDTAdapter())
+        .registerTypeAdapter(Channel.class, new ChannelAdapter())
+        .create();
 
     /**
      * Constructor
@@ -145,7 +146,7 @@ public class ChatServer extends WebSocketServer {
         );
 
         // Executing admin command "CONNECT" == sending the new user its UUID
-        this.executor.execute(
+        this.submitTask(
             new AdminCommandRunnable(
                 newUserMessage,
                 this,
@@ -153,10 +154,11 @@ public class ChatServer extends WebSocketServer {
             )
         );
 
-        System.out.println(
-                "onOpen: "
-                    + newUser.getNickName()
-                    + " just arrived on the server"
+        // TODO: remove debug logging code
+        System.err.println(
+            "onOpen: "
+                + newUser.getNickName()
+                + " just arrived on the server"
         );
     }
 
@@ -200,7 +202,7 @@ public class ChatServer extends WebSocketServer {
 
         // All messages with 0x0 destination UUID are admin messages
         if (inMessage.getDestinationUUID().equals(new UUID(0,0))) {
-            this.executor.execute(
+            this.submitTask(
                 new AdminCommandRunnable(
                     inMessage,
                     this,
@@ -211,12 +213,14 @@ public class ChatServer extends WebSocketServer {
             // For now messages are modified on arrival because client is not
             // yet aware of UUIDs attributed to channels
             Message udpdatedInMessage = new Message(
-                    inMessage.getAuthorUUID(),
-                    this.generalChannel.getChannelId(),
-                    inMessage.getPayload(),
-                    inMessage.getTimestamp()
+                inMessage.getAuthorUUID(),
+                this.generalChannel.getChannelId(),
+                inMessage.getPayload(),
+                inMessage.getTimestamp()
             );
-            this.executor.execute(new PublishMessageRunnable(udpdatedInMessage, this));
+            this.submitTask(
+                new PublishMessageRunnable(udpdatedInMessage, this)
+            );
         }
     }
 
@@ -237,7 +241,7 @@ public class ChatServer extends WebSocketServer {
     @Override
     public void onStart() {
         System.out.println(
-                "Server started on port " + this.serverPortNumber + "\n"
+            "Server started on port " + this.serverPortNumber + "\n"
         );
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
@@ -267,11 +271,17 @@ public class ChatServer extends WebSocketServer {
 
     Set<User> getConnectedUsers() {
         return this.getConnections().stream()
-                .map(obj -> (User) obj.getAttachment())
-                .collect(Collectors.toSet());
+            .map(obj -> (User) obj.getAttachment())
+            .collect(Collectors.toSet());
     }
 
     PublicRoom getGeneralChannel() {
         return this.generalChannel;
+    }
+
+    // Destined to be public : other tasks will submit new runnables to
+    // executor queue.
+    private void submitTask(Runnable task) {
+        this.executor.execute(task);
     }
 }

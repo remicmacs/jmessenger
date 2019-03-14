@@ -2,10 +2,12 @@ package us.hourgeon.jmessenger.server;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.java_websocket.WebSocket;
 import us.hourgeon.jmessenger.AdminCommand;
 import us.hourgeon.jmessenger.Model.*;
 
+import java.lang.reflect.Type;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -39,8 +41,9 @@ public class AdminCommandRunnable implements Runnable {
     /**
      * Gson serializer / deserializer
      */
-    static private final Gson gson = new GsonBuilder().registerTypeAdapter(
-            ZonedDateTime.class, new ZDTSerializerDeserializer()).create();
+    static private final Gson gson = new GsonBuilder()
+        .registerTypeAdapter(ZonedDateTime.class, new ZDTAdapter())
+        .registerTypeAdapter(Channel.class, new ChannelAdapter()).create();
 
     /**
      * Connection on which server will send the response
@@ -134,12 +137,15 @@ public class AdminCommandRunnable implements Runnable {
                 type = "CONNECT";
                 break;
             case CHANNELLIST:
-                payload = gson.toJson(this.getOpenChannels());
+                Type channelListToken =
+                        new TypeToken<ArrayList<Channel>>() {}.getType();
+                payload =
+                    gson.toJson(new ArrayList<Channel>(this.getOpenChannels()), channelListToken);
                 type = "CHANNELLIST";
                 break;
             case CREATECHANNEL:
                 Channel newChannel = this.createChannel();
-                payload = gson.toJson(newChannel, Channel.class);
+                payload = gson.toJson(newChannel);
                 type = "CREATECHANNEL";
                 break;
             case INVITEUSERS:
@@ -153,7 +159,6 @@ public class AdminCommandRunnable implements Runnable {
         }
 
         createResponseMessage(type, payload);
-
     }
 
     /**
@@ -181,7 +186,7 @@ public class AdminCommandRunnable implements Runnable {
                 ccr.getAlias()
             );
 
-            Collection<User> invites = ccr.getInitSubscribers();
+            Collection<User> invites = ccr.getInvites();
             this.sendInvites(invites);
         } else if (ccr.isPrivate()) {
             // TODO: change placeholder code

@@ -1,6 +1,7 @@
 package us.hourgeon.jmessenger.client;
 
 import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.collections.FXCollections;
@@ -21,6 +22,7 @@ import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -80,9 +82,10 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     private static final ObservableList<User> users = FXCollections.observableArrayList();
 
     private static final Gson gson =
-            new GsonBuilder().registerTypeAdapter(
-                    ZonedDateTime.class, new ZDTSerializerDeserializer())
-                    .create();
+        new GsonBuilder().registerTypeAdapter(
+            ZonedDateTime.class, new ZDTAdapter())
+            .registerTypeAdapter(Channel.class, new ChannelAdapter())
+            .create();
 
     private static final UUID adminChannelUUID = new UUID(0,0);
 
@@ -299,7 +302,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
      */
     @Override
     public void onMessage(String message) {
-        System.err.println("In ChatWindowController: " + message);
+        System.err.println("=== In ChatWindowController: " + message + "\n");
 
         AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
@@ -325,14 +328,25 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 request("CHANNELLIST", "");
                 request("CHANGENICKNAME", nickname);
                 initializeLists();
-            } else if (payload.getType().equals(AdminCommand.CommandType.CHANNELLIST)) {
-                System.err.println("\n\n"+payload.getCommandPayload() + "\n\n");
             }
 
             // For the CHANNELLIST response, prolly the best place to fill
             // the channels lists
             if (payload.getType().equals(AdminCommand.CommandType.CHANNELLIST)) {
-                System.out.println(payload.getCommandPayload());
+                String cmdPayload = payload.getCommandPayload();
+                Type channelListToken =
+                    new TypeToken<ArrayList<Channel>>() {}.getType();
+                ArrayList<Channel> channels = gson.fromJson(cmdPayload,
+                    channelListToken);
+
+                // TODO: Remove example code and replace by real logic
+                // Display UUID list of channel + type
+                channels.forEach(
+                    aChannel -> System.err.println(
+                        "UUID: " + aChannel.getChannelId()
+                            + ";Type=" + aChannel.getClass()
+                    )
+                );
             }
 
             // For the CHANGENICKNAME response, prolly the best place to set the nickname

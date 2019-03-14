@@ -2,17 +2,16 @@ package us.hourgeon.jmessenger.Model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Represent a channel creation request
  */
 public class CreateChannelRequest {
     /**
-     * List of initial subscribers
-     *
-     * TODO: change to list of initial admins
+     * List of invites to Users
      */
-    private ArrayList<User> initSubscribers;
+    private ArrayList<User> invites;
 
     /**
      * Channel alias
@@ -29,17 +28,17 @@ public class CreateChannelRequest {
      * @param isPrivate
      * @param isDirect
      */
-    public CreateChannelRequest(Collection<User> initSubscribers,
+    public CreateChannelRequest(Collection<User> invites,
                                 String alias, boolean isPrivate,
                                 boolean isDirect) {
-        this.initSubscribers = new ArrayList<User>(initSubscribers);
+        this.invites = new ArrayList<User>(invites);
         this.alias = alias;
         this.isPrivate = isPrivate;
         this.isDirect = isDirect;
     }
 
-    public ArrayList<User> getInitSubscribers() {
-        return initSubscribers;
+    public List<User> getInvites() {
+        return invites;
     }
 
     public String getAlias() {

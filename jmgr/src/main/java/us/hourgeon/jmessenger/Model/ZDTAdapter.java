@@ -7,7 +7,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Serializer / Deserializer for ZonedDateTime class
+ * Adapter for ZonedDateTime class
  *
  * Gson does not implement a default serialization of all java.* types for
  * some reason so we have to provide one.
@@ -15,16 +15,17 @@ import java.time.format.DateTimeFormatter;
  * In JSON, ZDT is expressed as ISO timestamp, because why using something
  * that is not a standard ?
  */
-public class ZDTSerializerDeserializer implements JsonDeserializer<ZonedDateTime>,
-        JsonSerializer<ZonedDateTime> {
+public class ZDTAdapter
+    implements JsonDeserializer<ZonedDateTime>, JsonSerializer<ZonedDateTime> {
+
     @Override
     public ZonedDateTime deserialize(
-            JsonElement json,
-            Type typeOfT,
-            JsonDeserializationContext context) throws JsonParseException {
+        JsonElement json,
+        Type typeOfT,
+        JsonDeserializationContext context) throws JsonParseException {
         return  DateTimeFormatter.ISO_DATE_TIME.parse(
-                json.getAsJsonPrimitive().getAsString(),
-                ZonedDateTime::from
+            json.getAsJsonPrimitive().getAsString(),
+            ZonedDateTime::from
         );
     }
 
