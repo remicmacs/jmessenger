@@ -2,7 +2,7 @@ package us.hourgeon.jmessenger.Model;
 
 import java.util.UUID;
 
-public class User {
+public class User implements Comparable<User> {
     /**
      * Nickname currently used by the User
      */
@@ -59,4 +59,19 @@ public class User {
         return this.uuid;
     }
 
+    @Override
+    public int compareTo(User user) {
+        return this.getUuid().compareTo(user.getUuid());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof User &&
+            ((User) o).getUuid().equals(this.getUuid());
+    }
+
+    @Override
+    public String toString() {
+        return "User#"+this.uuid + " a.k.a " + this.getNickName();
+    }
 }

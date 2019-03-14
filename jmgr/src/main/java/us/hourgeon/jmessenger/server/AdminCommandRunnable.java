@@ -38,17 +38,14 @@ public class AdminCommandRunnable implements Runnable {
      */
     private final User sender;
 
+    private final WebSocket connection;
+
     /**
      * Gson serializer / deserializer
      */
     static private final Gson gson = new GsonBuilder()
         .registerTypeAdapter(ZonedDateTime.class, new ZDTAdapter())
         .registerTypeAdapter(Channel.class, new ChannelAdapter()).create();
-
-    /**
-     * Connection on which server will send the response
-     */
-    private WebSocket connection = null;
 
     /**
      * Response to send by the server
@@ -61,26 +58,21 @@ public class AdminCommandRunnable implements Runnable {
      * Constructor
      * @param adminMessage {@link AdminCommandRunnable#adminMessage}
      * @param serverInstance {@link AdminCommandRunnable#serverInstance}
-     * @param sender {@link AdminCommandRunnable#sender}
+     * @param connection
      */
     AdminCommandRunnable(
-        Message adminMessage,
-        ChatServer serverInstance,
-        User sender
-    ) {
+            Message adminMessage,
+            ChatServer serverInstance,
+            WebSocket connection) {
         this.serverInstance = serverInstance;
         this.adminMessage = adminMessage;
-        this.sender = sender;
+        this.sender = connection.getAttachment();
+        this.connection = connection;
     }
 
     @Override
     public void run() {
-        System.err.println("Admin task: start");
-
-        System.err.println("Admin task: searching user Websocket");
-        this.findUserWebsocket();
-
-        System.err.println("Admin task: decoding command");
+        System.err.println("AdminCommand Start " + this.adminMessage.getPayload());
         this.decodeAdminMessage();
 
         if (this.connection != null) {
@@ -90,20 +82,6 @@ public class AdminCommandRunnable implements Runnable {
             System.err.println(
                     "Connection to user was closed between request and response"
             )   ;
-        }
-    }
-
-    /**
-     * Find the Websocket connection to the caller
-     */
-    // TODO: see if it's possible to do this with a Callable and a Future thingy
-    private void findUserWebsocket() {
-        // Finding websocket connection to sender
-        for (WebSocket aConnection : this.serverInstance.getConnections()) {
-            User attachedUser = aConnection.getAttachment();
-            if (this.sender.getUuid().equals(attachedUser.getUuid())) {
-                this.connection = aConnection;
-            }
         }
     }
 
@@ -137,15 +115,19 @@ public class AdminCommandRunnable implements Runnable {
                 type = "CONNECT";
                 break;
             case CHANNELLIST:
-                Type channelListToken =
-                        new TypeToken<ArrayList<Channel>>() {}.getType();
-                payload =
-                    gson.toJson(new ArrayList<Channel>(this.getOpenChannels()), channelListToken);
                 type = "CHANNELLIST";
+                Type channelListToken =
+                    new TypeToken<ArrayList<Channel>>() {}.getType();
+                payload =
+                    gson.toJson(
+                        new ArrayList<Channel>(
+                            this.getAccessibleChannels()), channelListToken
+                    );
                 break;
             case CREATECHANNEL:
                 Channel newChannel = this.createChannel();
-                payload = gson.toJson(newChannel);
+                this.serverInstance.addChannel(newChannel);
+                payload = gson.toJson(newChannel, Channel.class);
                 type = "CREATECHANNEL";
                 break;
             case INVITEUSERS:
@@ -171,40 +153,77 @@ public class AdminCommandRunnable implements Runnable {
         // Unpack CreateChannelRequest
         String payload = this.adminCommand.getCommandPayload();
         CreateChannelRequest ccr = gson.fromJson(
-                payload,
-                CreateChannelRequest.class
+            payload,
+            CreateChannelRequest.class
         );
 
+        // TODO: Always map invites to actual users
         // Create the channel accordingly
         Channel serverChannel;
         if (!ccr.isPrivate() && !ccr.isDirect()) {
+
+            // Create PublicRoom with User from request as sole admin
             ArrayList<User> initUser = new ArrayList<>();
             initUser.add(this.sender);
-
             serverChannel = new PublicRoom(
                 initUser,
                 ccr.getAlias()
             );
 
+            // Send invites to initial list of Users
             Collection<User> invites = ccr.getInvites();
             this.sendInvites(invites);
+
         } else if (ccr.isPrivate()) {
-            // TODO: change placeholder code
             ArrayList<User> initUser = new ArrayList<>();
             initUser.add(this.sender);
-            serverChannel = new PublicRoom(
-                    initUser,
-                    ccr.getAlias()
+
+            // Send invites to initial list of Users
+            Collection<User> invites = ccr.getInvites();
+            invites.add(this.sender);
+
+            // Create PrivateRoom with the requester as admin and list of
+            // authorized users.
+            serverChannel = new PrivateRoom(
+                invites,
+                initUser,
+                ccr.getAlias()
             );
+            // Requester and admin are subscribed to the channel
+            ((PrivateRoom) serverChannel).subscribeUser(this.sender);
+
+            this.sendInvites(invites);
+
         } else { // newChannel instanceof DirectMessageConversation
-            // TODO: check if DM channel does not exist yet
-            ArrayList<User> initUser = new ArrayList<>();
-            initUser.add(this.sender);
-            serverChannel = new PublicRoom(
-                    initUser,
-                    ccr.getAlias()
-            );
+            // Filter channels to find if DM Channel already exists
+            CopyOnWriteArraySet<Channel> directMessageUsersGroups =
+                this.serverInstance.getOpenChannels().stream()
+                    .filter(channel -> channel instanceof DirectMessageConversation)
+                    .collect(Collectors.toSet()).stream()
+                    .filter(channel ->
+                        (channel.getSubscribers().size() == ccr.getInvites().size())
+                    )
+                    .filter(
+                        channel -> channel.getSubscribers()
+                            .equals(new CopyOnWriteArraySet<>(ccr.getInvites()))
+                    ).collect(Collectors.toCollection(CopyOnWriteArraySet::new)
+                );
+
+            // If a DM Channel was found with a subscriber set exactly the
+            // same as the requested DM, return the current DM Channel
+            if (directMessageUsersGroups.size() > 0) {
+                serverChannel=
+                    (DirectMessageConversation) directMessageUsersGroups.toArray()[0];
+            } else {
+                serverChannel = new DirectMessageConversation(
+                    UUID.randomUUID(),
+                    ccr.getInvites() // TODO: should be mapped to server users
+                );
+
+                this.sendInvites(ccr.getInvites());
+            }
         }
+
         return serverChannel;
     }
 
@@ -244,15 +263,13 @@ public class AdminCommandRunnable implements Runnable {
     }
 
     // Construct a list of Channels accessible by the user who requested it
-    private List<Channel> getOpenChannels() {
+    private List<Channel> getAccessibleChannels() {
 
         // Recovering list of channel
         CopyOnWriteArraySet<Channel> channelList =
             this.serverInstance.getOpenChannels();
 
         return channelList.stream()
-            // Make it a Channel stream
-            .map(obj -> (Channel) obj)
             // Filter out Channel forbidden to user
             .filter(aChannel -> (aChannel instanceof PublicRoom) ||
                 (aChannel instanceof PrivateRoom &&
@@ -277,7 +294,8 @@ public class AdminCommandRunnable implements Runnable {
                     aChannel.getChannelId(),
                     aChannel.getSubscribers(),
                     ((PrivateRoom) aChannel).getAuthorizedUsers(),
-                    ((PrivateRoom) aChannel).getAdministrators()
+                    ((PrivateRoom) aChannel).getAdministrators(),
+                    ((PrivateRoom) aChannel).getAlias()
                 );
             } else { // aChannel instanceof DirectMessageConversation
                 newCurrentChannel = new DirectMessageConversation(

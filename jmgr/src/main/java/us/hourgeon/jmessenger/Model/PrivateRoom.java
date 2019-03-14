@@ -22,13 +22,13 @@ public class PrivateRoom extends AbstractRoom {
             String alias
     ) {
         super(
-                uuid,
-                initialSubscribers,
-                initialAdministrators,
-                alias
+            uuid,
+            initialSubscribers,
+            initialAdministrators,
+            alias
         );
         this.authorizedUsers =
-                new CopyOnWriteArraySet<>(initialAuthorizedUsers);
+            new CopyOnWriteArraySet<>(initialAuthorizedUsers);
     }
 
     /**

@@ -38,6 +38,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import java.io.File;
+import java.util.stream.Collectors;
 
 public class ChatWindowController implements MessageEvents, ChannelEvents, ContactEvents {
 
@@ -302,7 +303,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
      */
     @Override
     public void onMessage(String message) {
-        System.err.println("=== In ChatWindowController: " + message + "\n");
+        // TODO: Remove this annoying dump whenever possible ffs
+        //System.err.println("=== In ChatWindowController: " + message + "\n");
 
         AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
@@ -324,15 +326,16 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             // It is also a good place to put the requests to get all the available
             // data like the list of channels and informations about the user
             if (payload.getType().equals(AdminCommand.CommandType.CONNECT)) {
+                System.err.println("User new UUID : " + receivedMessage.getAuthorUUID());
                 me = new User("me", receivedMessage.getAuthorUUID());
                 request("CHANNELLIST", "");
                 request("CHANGENICKNAME", nickname);
                 initializeLists();
-            }
-
-            // For the CHANNELLIST response, prolly the best place to fill
-            // the channels lists
-            if (payload.getType().equals(AdminCommand.CommandType.CHANNELLIST)) {
+            } else if (
+                payload.getType().equals(AdminCommand.CommandType.CHANNELLIST)
+            ) {
+                // For the CHANNELLIST response, prolly the best place to fill
+                // the channels lists
                 String cmdPayload = payload.getCommandPayload();
                 Type channelListToken =
                     new TypeToken<ArrayList<Channel>>() {}.getType();
@@ -341,26 +344,32 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
                 // TODO: Remove example code and replace by real logic
                 channels.forEach(System.err::println);
-            }
-
-            // For the CHANGENICKNAME response, prolly the best place to set the nickname
-            if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) {
+            } else if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) {
+                // For the CHANGENICKNAME response, prolly the best place to set the nickname
                 System.out.println(payload.getCommandPayload());
                 nicknameLabel.setText("Here goes my new nickname stripped from the JSON");
+            } else if (payload.getType().equals(AdminCommand.CommandType.CREATECHANNEL)) {
+                String cmdPayload = payload.getCommandPayload();
+                Channel newlyAddedChannel =
+                    gson.fromJson(cmdPayload, Channel.class);
+
+                System.err.println("Newly added channel:: " + newlyAddedChannel);
             }
 
         } else {
-            for (AbstractChannel channel:rooms) {
-                System.out.println(channel.getChannelId());
-                if (channel.getChannelId().equals(receivedMessage.getAuthorUUID())) {
-                    System.out.println("Channel found in rooms !");
-                }
-            }
-            for (AbstractChannel channel:conversations) {
-                System.out.println(channel.getChannelId());
-                if (channel.getChannelId().equals(receivedMessage.getAuthorUUID())) {
-                    System.out.println("Channel found in conversations !");
-                }
+            // TODO: store correct UUIDs
+            // For now does not work because list of channel client-side does
+            // not have correct UUIDs
+            if (rooms.stream().map(AbstractChannel::getChannelId)
+                .collect(Collectors.toList())
+                .contains(receivedMessage.getDestinationUUID())) {
+                System.err.println("Channel found in rooms !");
+            } else if (conversations.stream().map(AbstractChannel::getChannelId)
+                .collect(Collectors.toList())
+                .contains(receivedMessage.getDestinationUUID())) {
+                System.err.println("Channel found in rooms !");
+            } else {
+                System.err.println("Channel not found, gasp !");
             }
 
             // Add the message and set the scrolling to the bottom

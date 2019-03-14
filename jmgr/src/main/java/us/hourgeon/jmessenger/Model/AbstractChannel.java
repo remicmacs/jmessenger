@@ -117,7 +117,7 @@ public abstract class AbstractChannel implements Channel {
 
         StringBuilder subscribersList = new StringBuilder("[");
         this.subscribers.forEach(user -> subscribersList.append("\n\t\t")
-            .append(user.getNickName()));
+            .append(user));
         subscribersList.append("\n\t]\n");
         sb.append(subscribersList.toString());
 
@@ -127,9 +127,18 @@ public abstract class AbstractChannel implements Channel {
             StringBuilder admins = new StringBuilder("[");
             ((AbstractRoom) this).getAdministrators().forEach(admin ->
                 admins.append("\n\t\t")
-                    .append(admin.getNickName()));
+                    .append(admin));
             admins.append("\n\t]\n");
             sb.append(admins);
+
+            if (this instanceof PrivateRoom) {
+                sb.append("\tAuthorized Users: [\n");
+                ((PrivateRoom) this).getAuthorizedUsers().forEach(user ->
+                    sb.append("\n\t\t")
+                        .append(user)
+                );
+                sb.append("\n\t]\n");
+            }
         }
         return sb.append("}\n").toString();
     }

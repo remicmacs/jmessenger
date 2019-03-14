@@ -124,9 +124,11 @@ public class ChatServer extends WebSocketServer {
         ArrayList<User> users = new ArrayList<>();
         users.add(newUser);
 
-        this.addChannel(new PrivateRoom(UUID.randomUUID(),users, users, users));
+        this.addChannel(new PrivateRoom(UUID.randomUUID(),users, users,
+            users, "PrivateRoom accessible by new user"));
 
-        this.addChannel(new DirectMessageConversation(UUID.randomUUID(),users));
+        /*this.addChannel(new DirectMessageConversation(UUID.randomUUID(),
+                users));*/
         // End of temporary block
 
         // On connect, user does not send a "proper" message, so we build one
@@ -147,11 +149,7 @@ public class ChatServer extends WebSocketServer {
 
         // Executing admin command "CONNECT" == sending the new user its UUID
         this.submitTask(
-            new AdminCommandRunnable(
-                newUserMessage,
-                this,
-                conn.getAttachment()
-            )
+            new AdminCommandRunnable(newUserMessage,this,conn)
         );
 
         // TODO: remove debug logging code
@@ -203,11 +201,7 @@ public class ChatServer extends WebSocketServer {
         // All messages with 0x0 destination UUID are admin messages
         if (inMessage.getDestinationUUID().equals(new UUID(0,0))) {
             this.submitTask(
-                new AdminCommandRunnable(
-                    inMessage,
-                    this,
-                    conn.getAttachment()
-                )
+                new AdminCommandRunnable(inMessage, this, conn)
             );
         } else {
             // For now messages are modified on arrival because client is not
@@ -249,10 +243,10 @@ public class ChatServer extends WebSocketServer {
         // TODO: remove temporary test private and dm channels
         // Add temporary private Channel and DMChannel with nobody in it
         this.addChannel(new PrivateRoom(
-            UUID.randomUUID(),
-            Collections.emptySet(),
-            Collections.emptySet(),
-            Collections.emptySet())
+                Collections.emptyList(),
+                Collections.emptyList(),
+                "EmptyPrivateChannel"
+            )
         );
 
         this.addChannel(new DirectMessageConversation(UUID.randomUUID(),
