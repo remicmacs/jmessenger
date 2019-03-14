@@ -145,6 +145,7 @@ public class AdminCommandRunnable implements Runnable {
             case INVITEUSERS:
             case BANUSERS:
             case CHANGENICKNAME:
+            case REQUESTHISTORY:
             default:
                 type = "ERROR";
                 payload = "NOT IMPLEMENTED";
@@ -172,24 +173,41 @@ public class AdminCommandRunnable implements Runnable {
         // Create the channel accordingly
         Channel serverChannel;
         if (!ccr.isPrivate() && !ccr.isDirect()) {
-            String alias = ccr.getAlias();
-            Collection<User> initSubs = ccr.getInitSubscribers();
-            serverChannel = new PublicChannel(UUID.randomUUID(),
-                initSubs, Collections.emptySortedSet(),
-                alias
+            ArrayList<User> initUser = new ArrayList<>();
+            initUser.add(this.sender);
+
+            serverChannel = new PublicRoom(
+                initUser,
+                ccr.getAlias()
             );
+
+            Collection<User> invites = ccr.getInitSubscribers();
+            this.sendInvites(invites);
         } else if (ccr.isPrivate()) {
             // TODO: change placeholder code
-            serverChannel = new PublicChannel(UUID.randomUUID(),
-                    ccr.getInitSubscribers(), Collections.emptySortedSet(),
-                    ccr.getAlias());
-        } else { // newChannel instanceof DirectMessageChannel
+            ArrayList<User> initUser = new ArrayList<>();
+            initUser.add(this.sender);
+            serverChannel = new PublicRoom(
+                    initUser,
+                    ccr.getAlias()
+            );
+        } else { // newChannel instanceof DirectMessageConversation
             // TODO: check if DM channel does not exist yet
-            serverChannel = new PublicChannel(UUID.randomUUID(),
-                    ccr.getInitSubscribers(), Collections.emptySortedSet(),
-                    ccr.getAlias());
+            ArrayList<User> initUser = new ArrayList<>();
+            initUser.add(this.sender);
+            serverChannel = new PublicRoom(
+                    initUser,
+                    ccr.getAlias()
+            );
         }
         return serverChannel;
+    }
+
+    // TODO: Implement invite logic
+    private void sendInvites(Collection<User> invites) {
+        invites.forEach((User aUser)
+            -> System.err.println("Sending an invite to " + aUser.getNickName())
+        );
     }
 
     /**
@@ -231,36 +249,35 @@ public class AdminCommandRunnable implements Runnable {
             // Make it a Channel stream
             .map(obj -> (Channel) obj)
             // Filter out Channel forbidden to user
-            .filter(aChannel -> (aChannel instanceof PublicChannel) ||
-                (aChannel instanceof PrivateChannel &&
-                    ((PrivateChannel) aChannel)
-                        .getAuthorizedUsers().contains(this.sender)
-                ) || (aChannel instanceof DirectMessageChannel &&
+            .filter(aChannel -> (aChannel instanceof PublicRoom) ||
+                (aChannel instanceof PrivateRoom &&
+                    ((PrivateRoom) aChannel)
+                        .isAuthorized(this.sender)
+                ) || (aChannel instanceof DirectMessageConversation &&
                     aChannel.getSubscribers().contains(this.sender)
                 )
             )
             // Recreate Channel list without history to minimize network load
             .map(aChannel -> {
             Channel newCurrentChannel;
-            if (aChannel instanceof PublicChannel) {
-                newCurrentChannel = new PublicChannel(
+            if (aChannel instanceof PublicRoom) {
+                newCurrentChannel = new PublicRoom(
                     aChannel.getChannelId(),
                     aChannel.getSubscribers(),
-                    Collections.emptySortedSet()
+                    ((PublicRoom) aChannel).getAdministrators(),
+                    ((PublicRoom) aChannel).getAlias()
                 );
-            } else if (aChannel instanceof PrivateChannel) {
-                newCurrentChannel = new PrivateChannel(
+            } else if (aChannel instanceof PrivateRoom) {
+                newCurrentChannel = new PrivateRoom(
                     aChannel.getChannelId(),
                     aChannel.getSubscribers(),
-                    ((PrivateChannel) aChannel).getAuthorizedUsers(),
-                    ((PrivateChannel) aChannel).getAdministrators(),
-                    Collections.emptySortedSet()
+                    ((PrivateRoom) aChannel).getAuthorizedUsers(),
+                    ((PrivateRoom) aChannel).getAdministrators()
                 );
-            } else { // aChannel instanceof DirectMessageChannel
-                newCurrentChannel = new DirectMessageChannel(
+            } else { // aChannel instanceof DirectMessageConversation
+                newCurrentChannel = new DirectMessageConversation(
                     aChannel.getChannelId(),
-                    aChannel.getSubscribers(),
-                    Collections.emptySortedSet()
+                    aChannel.getSubscribers()
                 );
             }
             return newCurrentChannel;

@@ -23,7 +23,8 @@ public class AdminCommand {
         CHANGENICKNAME("CHANGENICKNAME"),
         INVITEUSERS("INVITEUSERS"),
         BANUSERS("BANUSERS"),
-        ERROR("ERROR");
+        ERROR("ERROR"),
+        REQUESTHISTORY("REQUESTHISTORY");
 
         private final String typeName;
 

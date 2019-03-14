@@ -35,7 +35,7 @@ public class ChatServer extends WebSocketServer {
     private final CopyOnWriteArraySet<Channel> openChannels =
             new CopyOnWriteArraySet<>();
 
-    private final PublicChannel generalChannel;
+    private final PublicRoom generalChannel;
 
     // Need a GsonBuilder ad hoc since Message uses ZonedDateTime
     // and it is not properly (de)serialized natively.
@@ -77,9 +77,12 @@ public class ChatServer extends WebSocketServer {
         super( address );
         this.serverPortNumber = address.getPort();
         this.executor = executor;
-        UUID generalChannelUUID= UUID.randomUUID();
-        PublicChannel generalChannel = new PublicChannel(generalChannelUUID,
-                "General");
+
+        // "General" is the only Room with no admin
+        PublicRoom generalChannel = new PublicRoom(
+            Collections.emptyList(),
+            "General"
+        );
         this.openChannels.add(generalChannel);
         this.generalChannel = generalChannel;
     }
@@ -120,11 +123,9 @@ public class ChatServer extends WebSocketServer {
         ArrayList<User> users = new ArrayList<>();
         users.add(newUser);
 
-        this.addChannel(new PrivateChannel(UUID.randomUUID(),
-                users, users, users, Collections.emptySortedSet()));
+        this.addChannel(new PrivateRoom(UUID.randomUUID(),users, users, users));
 
-        this.addChannel(new DirectMessageChannel(UUID.randomUUID(), users,
-                Collections.emptySortedSet()));
+        this.addChannel(new DirectMessageConversation(UUID.randomUUID(),users));
         // End of temporary block
 
         // On connect, user does not send a "proper" message, so we build one
@@ -243,12 +244,15 @@ public class ChatServer extends WebSocketServer {
 
         // TODO: remove temporary test private and dm channels
         // Add temporary private Channel and DMChannel with nobody in it
-        this.addChannel(new PrivateChannel(UUID.randomUUID(),
-                Collections.emptySet(), Collections.emptySet(),
-                Collections.emptySet(), Collections.emptySortedSet()));
+        this.addChannel(new PrivateRoom(
+            UUID.randomUUID(),
+            Collections.emptySet(),
+            Collections.emptySet(),
+            Collections.emptySet())
+        );
 
-        this.addChannel(new DirectMessageChannel(UUID.randomUUID(),
-                Collections.emptySet(), Collections.emptySortedSet()));
+        this.addChannel(new DirectMessageConversation(UUID.randomUUID(),
+            Collections.emptySet()));
 
         // End of temporary block
     }
@@ -267,7 +271,7 @@ public class ChatServer extends WebSocketServer {
                 .collect(Collectors.toSet());
     }
 
-    PublicChannel getGeneralChannel() {
+    PublicRoom getGeneralChannel() {
         return this.generalChannel;
     }
 }

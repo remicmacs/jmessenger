@@ -1,6 +1,7 @@
 package us.hourgeon.jmessenger.Model;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.SortedSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -10,52 +11,73 @@ public abstract class AbstractChannel implements Channel {
     /**
      * Users currently listening to the Channel.
      */
-    final CopyOnWriteArraySet<User> subscribers;
+    private final CopyOnWriteArraySet<User> subscribers;
 
     /**
      * Messages history ordered by creation time
      */
-    final ConcurrentSkipListSet<Message> history;
+    private final ConcurrentSkipListSet<Message> history;
 
     /**
      * UUID for Channel object
      *
      * Database primary key.
      */
-    final UUID uuid;
+    private final UUID uuid;
 
     /**
-     * Alias name for the Channel
-     *
-     * Allows better memorization of channel reference for human weaklings
+     * Complete constructor
+     *  @param uuid               {@link PublicRoom#uuid}
+     * @param initialSubscribers {@link PublicRoom#subscribers}
+     * @param history            {@link PublicRoom#history}
      */
-    private final String alias;
-
-    /**
-     * Constructor
-     * @param uuid {@link AbstractChannel#uuid}
-     * @param initialSubscribers {@link AbstractChannel#subscribers}
-     * @param history {@link AbstractChannel#history}
-     * @param alias {@link AbstractChannel#alias}
-     */
-    AbstractChannel(
-            UUID uuid, Collection<User> initialSubscribers,
-            SortedSet<Message> history,
-            String alias) {
-        subscribers = new CopyOnWriteArraySet<>(initialSubscribers);
-        this.uuid = uuid;
-        this.history = new ConcurrentSkipListSet<>(history);
-        this.alias = alias;
-    }
-
-    AbstractChannel(
-            UUID uuid, Collection<User> initialSubscribers,
+    private AbstractChannel(
+            UUID uuid,
+            Collection<User> initialSubscribers,
             SortedSet<Message> history
     ) {
-        subscribers = new CopyOnWriteArraySet<>(initialSubscribers);
         this.uuid = uuid;
-        this.history = new ConcurrentSkipListSet<>(history);
-        this.alias = "Channel#"+this.uuid.toString();
+        this.subscribers = new CopyOnWriteArraySet<User>(initialSubscribers);
+        this.history = new ConcurrentSkipListSet<Message>(history);
+    }
+
+    /**
+     * Default Constructor
+     *
+     * For lazy people.
+     */
+    public AbstractChannel() {
+        this(UUID.randomUUID(),
+                Collections.emptyList(),
+                Collections.emptySortedSet());
+    }
+
+    /**
+     * Constructor with only UUID and subscribers
+     *
+     * Because the constructor with the history was mostly destined for a
+     * version of this server with a database (hydration).
+     * @param uuid {@link PublicRoom#uuid}
+     * @param initialSubscribers {@link PublicRoom#subscribers}
+     */
+    AbstractChannel(UUID uuid, Collection<User> initialSubscribers) {
+        this(uuid, initialSubscribers, Collections.emptySortedSet());
+    }
+
+    /**
+     * Constuctor with only the UUID
+     * @param uuid {@link PublicRoom#uuid}
+     */
+    public AbstractChannel(UUID uuid) {
+        this(uuid,
+            Collections.emptyList(),
+            Collections.emptySortedSet());
+    }
+
+    public AbstractChannel(Collection<User> initialSubscribers) {
+        this(UUID.randomUUID(),
+            initialSubscribers,
+            Collections.emptySortedSet());
     }
 
     @Override
@@ -73,18 +95,15 @@ public abstract class AbstractChannel implements Channel {
 
     @Override
     public CopyOnWriteArraySet<User> getSubscribers() {
+        // Defensive copy of subscribers
         return new CopyOnWriteArraySet<>(this.subscribers);
     }
 
-    public void subscribeUser(User newSubscriber) {
-        this.subscribers.add(newSubscriber);
+    public boolean subscribeUser(User newSubscriber) {
+        return this.subscribers.add(newSubscriber);
     }
 
-    public void appendMessage(Message incomingMessage) {
-        this.history.add(incomingMessage);
-    }
-
-    public String getAlias() {
-        return this.alias;
+    public boolean appendMessage(Message incomingMessage) {
+        return this.history.add(incomingMessage);
     }
 }

@@ -1,6 +1,7 @@
 package us.hourgeon.jmessenger.client;
 
 import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.collections.FXCollections;
@@ -23,9 +24,6 @@ import us.hourgeon.jmessenger.Model.*;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 public class ChatWindowController implements MessageEvents, ChannelEvents, ContactEvents {
 
@@ -151,13 +149,12 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         for (int i = 0; i < 7; i++) {
             participants.add(new User("Contact " + i, UUID.randomUUID()));
 
-            conversations.add(new DirectMessageChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
-            rooms.add(new PublicChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
-            rooms.add(new PrivateChannel(UUID.randomUUID(),
+            conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
+            rooms.add(new PublicRoom(Collections.emptyList()));
+            rooms.add(new PrivateRoom(UUID.randomUUID(),
                     Collections.emptyList(),
                     Collections.emptyList(),
-                    Collections.emptyList(),
-                    Collections.emptySortedSet()));
+                    Collections.emptyList()));
         }
 
         // Default setting on start
@@ -311,6 +308,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             if (payload.getType().equals(AdminCommand.CommandType.CONNECT)) {
                 me = new User("me", receivedMessage.getAuthorUUID());
                 initializeLists();
+            } else if (payload.getType().equals(AdminCommand.CommandType.CHANNELLIST)) {
+                System.err.println("\n\n"+payload.getCommandPayload() + "\n\n");
             }
 
         } else {

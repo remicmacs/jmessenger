@@ -31,10 +31,9 @@ public interface Channel {
     CopyOnWriteArraySet<User> getSubscribers();
 
     /**
-     * Get the current alias of the channel
-     *
-     * Because humans don't remember UUID very well.
-     * @return alias of the Channel
+     * Add a message to the history of the channel
+     * @param incomingMessage the message sent to the channel
+     * @return true if adding is a success
      */
-    String getAlias();
+    boolean appendMessage(Message incomingMessage);
 }
