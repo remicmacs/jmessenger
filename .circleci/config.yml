@@ -27,5 +27,7 @@ jobs:
       - run: gradle dependencies
 
       # run tests!
+      - run: pwd
+      - run: ls -la
       - run: gradle clientUberJar
       - run: gradle serverUberJar
