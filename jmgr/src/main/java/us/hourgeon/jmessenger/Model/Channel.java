@@ -34,7 +34,7 @@ public interface Channel {
      * Get the current alias of the channel
      *
      * Because humans don't remember UUID very well.
-     * @return
+     * @return alias of the Channel
      */
     String getAlias();
 }

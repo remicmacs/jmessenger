@@ -14,6 +14,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import us.hourgeon.jmessenger.AdminCommand;
 import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellFactory;
 import us.hourgeon.jmessenger.client.ContactCell.ContactCellFactory;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
@@ -21,9 +22,7 @@ import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
 
 // For XML export
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -64,6 +63,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     Button inviteButton;
     @FXML
     Button exportXMLButton;
+    @FXML
+    Label nicknameLabel;
 
     private static final ObservableList<AbstractChannel> rooms = FXCollections.observableArrayList();
     private static final ObservableList<AbstractChannel> conversations = FXCollections.observableArrayList();
@@ -74,7 +75,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
     private WebSocketController webSocketController;
 
-    private User me;
+    private User me = new User("me", new UUID(0,0));
+
+    private static final ObservableList<User> users = FXCollections.observableArrayList();
 
     private static final Gson gson =
             new GsonBuilder().registerTypeAdapter(
@@ -82,6 +85,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                     .create();
 
     private static final UUID adminChannelUUID = new UUID(0,0);
+
+    private String nickname;
 
 
     /**
@@ -136,6 +141,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             AbstractChannel room = (AbstractChannel)currentRoom.getValue();
             roomLabel.setText(room.getChannelId().toString());
             messages.setAll(room.getHistory().getMessages());
+            participants.setAll(room.getSubscribers());
         });
 
         // Configure the chat entry field to send the messages
@@ -149,7 +155,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             }
         });
         chatEntrySendButton.setOnAction(value -> send());
-
         addRoomButton.setOnAction(value -> openAddChannelDialog(false));
         addConvoButton.setOnAction(value -> openAddChannelDialog(true));
         inviteButton.setOnAction(value -> openInviteDialog());
@@ -164,7 +169,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             participants.add(new User("Contact " + i, UUID.randomUUID()));
 
             conversations.add(new DirectMessageChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
-            rooms.add(new PublicChannel(UUID.randomUUID(), Collections.emptyList(), Collections.emptySortedSet()));
+            rooms.add(new PublicChannel(UUID.randomUUID(), new ArrayList<>(Arrays.asList(me)), Collections.emptySortedSet()));
             rooms.add(new PrivateChannel(UUID.randomUUID(),
                     Collections.emptyList(),
                     Collections.emptyList(),
@@ -245,18 +250,10 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void sendTestMessage() {
-        UUID adminChannelUUID = new UUID(0,0);
-        String adminCommand = "Create Channel Toto";
+        request("CHANNELLIST", "");
+        request("CHANGENICKNAME", nickname);
 
-        Message adminMessageTest = new Message(
-                this.me.getUuid(),
-                adminChannelUUID,
-                adminCommand,
-                ZonedDateTime.now()
-        );
-
-        String toSend = gson.toJson(adminMessageTest, Message.class);
-        this.webSocketController.send(toSend);
+        nicknameLabel.setText(nickname);
     }
 
 
@@ -267,6 +264,12 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     void setWebSocketController(WebSocketController webSocketController) {
         this.webSocketController = webSocketController;
         this.webSocketController.registerMessageEvents(this);
+    }
+
+
+
+    void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 
 
@@ -298,26 +301,47 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
      */
     @Override
     public void onMessage(String message) {
+        System.err.println("In ChatWindowController: " + message);
+
         AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
-        // We add the message and set the scrolling to the bottom
+        // Deserializing message
         Message receivedMessage = gson.fromJson(message, Message.class);
-        // Temporary dump
-        System.err.println(message);
 
         // Check for admin message, else we'll guess it's a message
         if (receivedMessage.getDestinationUUID().equals(adminChannelUUID)) {
 
+            // Admin Message recieved, inflating payload into AdminCommand
+            AdminCommand payload = gson.fromJson(
+                receivedMessage.getPayload(),
+                AdminCommand.class
+            );
+
             // If we receive the new connection message, the author UUID is the
             // client UUID given by the server. We can then initialize the user
             // and proceed with the rest of the session initialization
-            if (receivedMessage.getPayload().equals("new connection: /")) {
+            // It is also a good place to put the requests to get all the available
+            // data like the list of channels and informations about the user
+            if (payload.getType().equals(AdminCommand.CommandType.CONNECT)) {
                 me = new User("me", receivedMessage.getAuthorUUID());
+                request("CHANNELLIST", "");
+                request("CHANGENICKNAME", nickname);
                 initializeLists();
             }
 
+            // For the CHANNELLIST response, prolly the best place to fill
+            // the channels lists
+            if (payload.getType().equals(AdminCommand.CommandType.CHANNELLIST)) {
+                System.out.println(payload.getCommandPayload());
+            }
+
+            // For the CHANGENICKNAME response, prolly the best place to set the nickname
+            if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) {
+                System.out.println(payload.getCommandPayload());
+                nicknameLabel.setText("Here goes my new nickname stripped from the JSON");
+            }
+
         } else {
-            //AbstractChannel room;
             for (AbstractChannel channel:rooms) {
                 System.out.println(channel.getChannelId());
                 if (channel.getChannelId().equals(receivedMessage.getAuthorUUID())) {
@@ -330,6 +354,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                     System.out.println("Channel found in conversations !");
                 }
             }
+
+            // Add the message and set the scrolling to the bottom
             messages.add(receivedMessage);
             room.appendMessage(receivedMessage);
             messagesList.scrollTo(messages.size());
@@ -380,6 +406,10 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         }
     }
 
+
+    /*************************************************************************
+     * ONREQUEST EVENTS SHOULD BE HERE
+     ************************************************************************/
 
     @Override
     public void onQuitRequest(UUID uuid) {
@@ -441,10 +471,42 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         System.out.println("Request promoting " + user.toString() + " from " + channel.getChannelId().toString());
     }
 
+  
+    /*************************************************************************
+     * THIS WHERE WE SHOULD MAKE THE REQUESTS TO THE SERVER
+     ************************************************************************/
 
+
+    /**
+     * Make an request through the admin channel
+     * @param request The type of the request, see AdminCommand.CommandType
+     * @param argument The argument to pass to the request
+     */
+    private void request(String request, String argument) {
+
+        // We build an admin command dumper with gson
+        String adminCommand = gson.toJson(
+                new AdminCommand(request, argument),
+                AdminCommand.class
+        );
+
+        // We build a classic message with the admin command as payload
+        Message adminMessageTest = new Message(
+                this.me.getUuid(),
+                adminChannelUUID,
+                adminCommand,
+                ZonedDateTime.now()
+        );
+
+        // And we send it
+        String toSend = gson.toJson(adminMessageTest, Message.class);
+        this.webSocketController.send(toSend);
+    }
+  
+  
     public void exportToXML() {
         System.out.println("Exporting to XML");
-
+          
         try {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -459,15 +521,15 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
             for (Message message:messages) {
                 Element messageEl = doc.createElement("message");
+              
                 Attr authorUUID = doc.createAttribute("authorUUID");
                 Attr timestamp = doc.createAttribute("timestamp");
-
                 authorUUID.setValue(message.getAuthorUUID().toString());
                 timestamp.setValue(message.getTimestamp().toString());
 
                 messageEl.setAttributeNode(authorUUID);
                 messageEl.setAttributeNode(timestamp);
-
+              
                 messageEl.appendChild(doc.createTextNode(message.getPayload()));
                 rootElement.appendChild(messageEl);
             }
@@ -476,6 +538,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
             DOMSource source = new DOMSource(doc);
+
             StreamResult result = new StreamResult(new File("./export.xml"));
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.transform(source, result);

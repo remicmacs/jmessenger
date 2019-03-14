@@ -13,7 +13,7 @@
           alignment="TOP_CENTER"
           prefWidth="300">
 
-        <Label fx:id="nickNameLabel">Username</Label>
+        <Label fx:id="nicknameLabel">Username</Label>
 
         <ScrollPane VBox.vgrow="ALWAYS"
                     hbarPolicy="NEVER">
