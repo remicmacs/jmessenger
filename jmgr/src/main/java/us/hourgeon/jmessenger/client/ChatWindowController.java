@@ -24,6 +24,19 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.*;
 
+// For XML export
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import java.io.File;
+
 public class ChatWindowController implements MessageEvents, ChannelEvents, ContactEvents {
 
     @FXML
@@ -48,6 +61,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     Button addRoomButton;
     @FXML
     Button inviteButton;
+    @FXML
+    Button exportXMLButton;
     @FXML
     Label nicknameLabel;
 
@@ -144,8 +159,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         addConvoButton.setOnAction(value -> openAddChannelDialog(true));
         inviteButton.setOnAction(value -> openInviteDialog());
         testButton.setOnAction(value -> sendTestMessage());
-
-        //initializeLists();
+        exportXMLButton.setOnAction(value -> exportToXML());
     }
 
 
@@ -457,7 +471,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         System.out.println("Request promoting " + user.toString() + " from " + channel.getChannelId().toString());
     }
 
-
+  
     /*************************************************************************
      * THIS WHERE WE SHOULD MAKE THE REQUESTS TO THE SERVER
      ************************************************************************/
@@ -488,5 +502,52 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         String toSend = gson.toJson(adminMessageTest, Message.class);
         this.webSocketController.send(toSend);
     }
+  
+  
+    public void exportToXML() {
+        System.out.println("Exporting to XML");
+          
+        try {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.newDocument();
 
+            // root element
+            Element rootElement = doc.createElement("messages");
+            Attr channelUUID = doc.createAttribute("channelUUID");
+            channelUUID.setValue(((AbstractChannel)currentRoom.getValue()).getChannelId().toString());
+            rootElement.setAttributeNode(channelUUID);
+            doc.appendChild(rootElement);
+
+            for (Message message:messages) {
+                Element messageEl = doc.createElement("message");
+              
+                Attr authorUUID = doc.createAttribute("authorUUID");
+                Attr timestamp = doc.createAttribute("timestamp");
+                authorUUID.setValue(message.getAuthorUUID().toString());
+                timestamp.setValue(message.getTimestamp().toString());
+
+                messageEl.setAttributeNode(authorUUID);
+                messageEl.setAttributeNode(timestamp);
+              
+                messageEl.appendChild(doc.createTextNode(message.getPayload()));
+                rootElement.appendChild(messageEl);
+            }
+
+            // write the content into xml file
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(doc);
+
+            StreamResult result = new StreamResult(new File("./export.xml"));
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.transform(source, result);
+
+            // Output to console for testing
+            StreamResult consoleResult = new StreamResult(System.out);
+            transformer.transform(source, consoleResult);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

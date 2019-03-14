@@ -40,7 +40,10 @@
     <VBox spacing="10">
         <VBox VBox.vgrow="ALWAYS">
 
-            <Label fx:id="roomLabel"/>
+            <HBox>
+                <Label fx:id="roomLabel"/>
+                <Button fx:id="exportXMLButton">Export to XML</Button>
+            </HBox>
 
             <ListView fx:id="messagesList"
                       VBox.vgrow="ALWAYS"
