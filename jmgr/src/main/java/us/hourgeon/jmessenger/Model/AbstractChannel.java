@@ -48,8 +48,8 @@ public abstract class AbstractChannel implements Channel {
      */
     public AbstractChannel() {
         this(UUID.randomUUID(),
-                Collections.emptyList(),
-                Collections.emptySortedSet());
+            Collections.emptyList(),
+            Collections.emptySortedSet());
     }
 
     /**
@@ -88,8 +88,8 @@ public abstract class AbstractChannel implements Channel {
     @Override
     public ChannelHistory getHistory() {
         return new ChannelHistory(
-                this.uuid,
-                this.history
+            this.uuid,
+            this.history
         );
     }
 
@@ -105,5 +105,32 @@ public abstract class AbstractChannel implements Channel {
 
     public boolean appendMessage(Message incomingMessage) {
         return this.history.add(incomingMessage);
+    }
+
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("{\n");
+        sb.append("\tUUID: \"").append(this.uuid)
+            .append("\"\n\tType: \"").append(this.getClass())
+            .append("\"\n\tSubscribers: ");
+
+        StringBuilder subscribersList = new StringBuilder("[");
+        this.subscribers.forEach(user -> subscribersList.append("\n\t\t")
+            .append(user.getNickName()));
+        subscribersList.append("\n\t]\n");
+        sb.append(subscribersList.toString());
+
+        if (this instanceof AbstractRoom) {
+            sb.append("\tAlias: \"").append(((AbstractRoom) this).getAlias())
+                .append("\"\n\tAdmins: ");
+            StringBuilder admins = new StringBuilder("[");
+            ((AbstractRoom) this).getAdministrators().forEach(admin ->
+                admins.append("\n\t\t")
+                    .append(admin.getNickName()));
+            admins.append("\n\t]\n");
+            sb.append(admins);
+        }
+        return sb.append("}\n").toString();
     }
 }

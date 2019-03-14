@@ -340,13 +340,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                     channelListToken);
 
                 // TODO: Remove example code and replace by real logic
-                // Display UUID list of channel + type
-                channels.forEach(
-                    aChannel -> System.err.println(
-                        "UUID: " + aChannel.getChannelId()
-                            + ";Type=" + aChannel.getClass()
-                    )
-                );
+                channels.forEach(System.err::println);
             }
 
             // For the CHANGENICKNAME response, prolly the best place to set the nickname
