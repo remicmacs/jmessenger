@@ -69,16 +69,6 @@ public abstract class AbstractRoom extends AbstractChannel {
     }
 
     /**
-     * Change the alias to the Channel
-     *
-     * Because all Channel properties are immutable, a copy of the Channel is
-     * constructed and returned.
-     * @param alias the new alias of the Channel
-     * @return the copy of the Channel with the new alias
-     */
-    abstract AbstractRoom changeAlias(String alias);
-
-    /**
      * Getter for alias property
      * @return {@link AbstractRoom#alias}
      */

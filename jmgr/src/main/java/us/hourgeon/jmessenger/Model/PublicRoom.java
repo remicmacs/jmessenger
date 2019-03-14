@@ -28,14 +28,4 @@ public class PublicRoom extends AbstractRoom {
     public PublicRoom(Collection<User> initialAdmins) {
         this(UUID.randomUUID(),initialAdmins);
     }
-
-    @Override
-    AbstractRoom changeAlias(String alias) {
-        return new PublicRoom(
-            this.getChannelId(),
-            this.getSubscribers(),
-            this.getAdministrators(),
-            alias
-        );
-    }
 }

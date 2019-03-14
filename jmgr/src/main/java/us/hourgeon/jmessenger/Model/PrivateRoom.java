@@ -89,16 +89,6 @@ public class PrivateRoom extends AbstractRoom {
         return new CopyOnWriteArraySet<>(this.authorizedUsers);
     }
 
-    @Override
-    AbstractRoom changeAlias(String alias) {
-        return new PrivateRoom(
-            this.getChannelId(),
-            this.getSubscribers(),
-            this.getAuthorizedUsers(),
-            this.getAdministrators()
-        );
-    }
-
     public boolean isAuthorized(User aUser) {
         return this.authorizedUsers.contains(aUser);
     }
