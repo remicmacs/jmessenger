@@ -24,13 +24,8 @@ jobs:
     steps:
       - checkout
 
-      - run: gradle dependencies
+      - run: cd jmgr && gradle dependencies
+      - run: cd jmgr && ./gradlew dependencies
 
-      # run tests!
-      - run: pwd
-      - run: ls -la
-      - run: cd jmgr
-      - run: pwd
-      - run: ls -la
       - run: cd jmgr && ./gradlew clientUberJar
       - run: cd jmgr && ./gradlew serverUberJar
