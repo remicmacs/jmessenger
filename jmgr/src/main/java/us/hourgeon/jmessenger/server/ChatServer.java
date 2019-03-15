@@ -4,7 +4,7 @@ import com.google.gson.*;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import us.hourgeon.jmessenger.AdminCommand;
+import us.hourgeon.jmessenger.Model.AdminCommand;
 import us.hourgeon.jmessenger.Model.*;
 
 import java.net.InetSocketAddress;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 /**
  * Websocket server implementation for chat use case.
- *
+ * <p>
  * This class is the server side entrypoint of all interaction between the
  * client and the server. It is an event-driven server, relying on the
  * Websocket application protocol. Websocket is a full-duplex protocol,
@@ -47,11 +47,11 @@ public class ChatServer extends WebSocketServer {
 
     /**
      * Constructor
-     *
+     * <p>
      * Default values are used in this default constructor.
-     *
+     * <p>
      * Default port is set to 38887.
-     *
+     * <p>
      * Executor service instantiated is a CachedThreadPool
      */
     ChatServer() {
@@ -60,10 +60,10 @@ public class ChatServer extends WebSocketServer {
 
     /**
      * Constructor taking a port number
-     *
+     * <p>
      * The server will be available on the port number passed as parameter.
      *
-     * @param port
+     * @param port the port
      */
     public ChatServer( int port ) {
         this(port, Executors.newCachedThreadPool());
@@ -247,22 +247,56 @@ public class ChatServer extends WebSocketServer {
         // End of temporary block
     }
 
+    /**
+     * Add channel.
+     *
+     * @param newChannel the new channel
+     */
     void addChannel(Channel newChannel) {
         this.openChannels.put(newChannel.getChannelId(), newChannel);
     }
 
+    /**
+     * Gets open channels.
+     *
+     * @return the open channels
+     */
     ConcurrentHashMap<UUID, Channel> getOpenChannels() {
         return this.openChannels;
     }
 
+    /**
+     * Gets connected users.
+     *
+     * @return the connected users
+     */
     Set<User> getConnectedUsers() {
         return this.getConnections().stream()
             .map(obj -> (User) obj.getAttachment())
             .collect(Collectors.toSet());
     }
 
+    /**
+     * Gets general channel.
+     *
+     * @return the general channel
+     */
     PublicRoom getGeneralChannel() {
         return this.generalChannel;
+    }
+
+    /**
+     * Change user nickname
+     *
+     * Replace old user with rename new one
+     * @param updatedUser renamed user
+     * @return success|failure
+     */
+    public boolean updateUser(User updatedUser) {
+        return this.getOpenChannels().values().stream()
+            .filter(channel -> channel.isSubscribed(updatedUser))
+            .map(channel -> channel.renameUser(updatedUser))
+            .reduce(true, (prev, res) -> prev && res);
     }
 
     // Destined to be public : other tasks will submit new runnables to

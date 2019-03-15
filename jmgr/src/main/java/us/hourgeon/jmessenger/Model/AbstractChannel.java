@@ -1,9 +1,6 @@
 package us.hourgeon.jmessenger.Model;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.SortedSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public abstract class AbstractChannel implements Channel {
@@ -102,6 +99,14 @@ public abstract class AbstractChannel implements Channel {
         return this.subscribers.add(newSubscriber);
     }
 
+    public boolean unsubscribeUser(User subscriber) {
+        return this.subscribers.remove(subscriber);
+    }
+
+    public boolean isSubscribed(User user) {
+        return this.subscribers.contains(user);
+    }
+
     public boolean appendMessage(Message incomingMessage) {
         return this.history.add(incomingMessage);
     }
@@ -150,5 +155,38 @@ public abstract class AbstractChannel implements Channel {
     public boolean equals(Object o) {
         return (o instanceof AbstractChannel) &&
             (((AbstractChannel) o).compareTo(this) == 0);
+    }
+
+    /**
+     * Update a user's name across channels
+     *
+     * @param updatedUser
+     * @return
+     */
+    public boolean renameUser(User updatedUser) {
+        Optional<User> optionalUser =
+            this.subscribers.stream().filter(user -> user.equals(updatedUser))
+            .findFirst();
+
+        optionalUser.ifPresent(user -> {
+            this.unsubscribeUser(user);
+            this.subscribeUser(updatedUser);
+
+            if (this instanceof AbstractRoom ) {
+                if (((AbstractRoom) this).isAdmin(user)) {
+                    ((AbstractRoom) this).demoteAdmin(user);
+                    ((AbstractRoom) this).promoteUser(updatedUser);
+                }
+
+                if (this instanceof PrivateRoom) {
+                    if (((PrivateRoom) this).isAuthorized(user)) {
+                        ((PrivateRoom) this).banUser(user);
+                        ((PrivateRoom) this).authorizeUser(updatedUser);
+                    }
+                }
+            }
+        });
+
+        return true;
     }
 }

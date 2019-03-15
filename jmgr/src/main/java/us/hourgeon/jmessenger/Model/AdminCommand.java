@@ -1,4 +1,4 @@
-package us.hourgeon.jmessenger;
+package us.hourgeon.jmessenger.Model;
 
 /**
  * Represents a server management command

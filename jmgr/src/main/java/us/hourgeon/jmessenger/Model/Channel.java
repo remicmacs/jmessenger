@@ -37,4 +37,27 @@ public interface Channel extends Comparable<Channel> {
      * @return true if adding is a success
      */
     boolean appendMessage(Message incomingMessage);
+
+    boolean renameUser(User updatedUser);
+
+    /**
+     * Register an user in subscribers list
+     * @param newSubscriber
+     * @return
+     */
+    boolean subscribeUser(User newSubscriber);
+
+    /**
+     * Remove an user from subscribers list
+     * @param subscriber
+     * @return
+     */
+    boolean unsubscribeUser(User subscriber);
+
+    /**
+     * Returns if user is subscribed to the channel or not
+     * @param user
+     * @return
+     */
+    boolean isSubscribed(User user);
 }

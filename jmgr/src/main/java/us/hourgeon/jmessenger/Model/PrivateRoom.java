@@ -14,11 +14,11 @@ public class PrivateRoom extends AbstractRoom {
      * Complete constructor
      */
     public PrivateRoom(
-            UUID uuid,
-            Collection<User> initialSubscribers,
-            Collection<User> initialAuthorizedUsers,
-            Collection<User> initialAdministrators,
-            String alias
+        UUID uuid,
+        Collection<User> initialSubscribers,
+        Collection<User> initialAuthorizedUsers,
+        Collection<User> initialAdministrators,
+        String alias
     ) {
         super(
             uuid,
@@ -35,10 +35,10 @@ public class PrivateRoom extends AbstractRoom {
      * subscribers
      */
     public PrivateRoom(
-            UUID uuid,
-            Collection<User> initialSubscribers,
-            Collection<User> initialAuthorizedUsers,
-            Collection<User> initialAdministrators
+        UUID uuid,
+        Collection<User> initialSubscribers,
+        Collection<User> initialAuthorizedUsers,
+        Collection<User> initialAdministrators
     ) {
         this(
             uuid,
@@ -50,18 +50,18 @@ public class PrivateRoom extends AbstractRoom {
     }
 
     private PrivateRoom(
-            UUID uuid,
-            Collection<User> initialAuthorizedUsers,
-            Collection<User> initialAdministrators
+        UUID uuid,
+        Collection<User> initialAuthorizedUsers,
+        Collection<User> initialAdministrators
     ) {
         this(uuid, initialAdministrators, initialAuthorizedUsers,
                 initialAdministrators);
     }
 
     public PrivateRoom(
-            Collection<User> initialAuthorizedUsers,
-            Collection<User> initialAdministrators,
-            String alias
+        Collection<User> initialAuthorizedUsers,
+        Collection<User> initialAdministrators,
+        String alias
     ) {
         this(
             UUID.randomUUID(),
@@ -73,8 +73,8 @@ public class PrivateRoom extends AbstractRoom {
     }
 
     public PrivateRoom(
-            Collection<User> initialAuthorizedUsers,
-            Collection<User> initialAdministrators
+        Collection<User> initialAuthorizedUsers,
+        Collection<User> initialAdministrators
     ) {
         this(UUID.randomUUID(), initialAuthorizedUsers, initialAdministrators);
     }
@@ -88,7 +88,16 @@ public class PrivateRoom extends AbstractRoom {
         return new ConcurrentSkipListSet<>(this.authorizedUsers);
     }
 
+    // TODO: comment that
     public boolean isAuthorized(User aUser) {
         return this.authorizedUsers.contains(aUser);
+    }
+
+    public boolean banUser(User toBan) {
+        return this.authorizedUsers.remove(toBan);
+    }
+
+    public boolean authorizeUser(User toAuthorize) {
+        return this.authorizedUsers.add(toAuthorize);
     }
 }

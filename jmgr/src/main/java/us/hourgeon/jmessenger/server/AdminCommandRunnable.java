@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.java_websocket.WebSocket;
-import us.hourgeon.jmessenger.AdminCommand;
+import us.hourgeon.jmessenger.Model.AdminCommand;
 import us.hourgeon.jmessenger.Model.*;
 
 import java.lang.reflect.Type;
@@ -137,6 +137,18 @@ public class AdminCommandRunnable implements Runnable {
             case INVITEUSERS:
             case BANUSERS:
             case CHANGENICKNAME:
+                type = "CHANGENICKNAME";
+                String newNick =
+                    gson.fromJson(this.adminCommand.getCommandPayload(),
+                        String.class);
+                User updatedUser = new User(
+                    newNick,
+                    this.sender.getUuid()
+                );
+                Boolean res = this.serverInstance.updateUser(updatedUser);
+                payload = gson.toJson(res ? newNick : this.sender.getNickName());
+                if (res) this.connection.setAttachment(updatedUser);
+                break;
             case REQUESTHISTORY:
             default:
                 type = "ERROR";

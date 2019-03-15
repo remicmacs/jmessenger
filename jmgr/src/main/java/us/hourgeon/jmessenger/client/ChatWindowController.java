@@ -15,14 +15,13 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import us.hourgeon.jmessenger.AdminCommand;
+import us.hourgeon.jmessenger.Model.AdminCommand;
 import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellFactory;
 import us.hourgeon.jmessenger.client.ContactCell.ContactCellFactory;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -350,16 +349,21 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                     channelListToken);
 
                 ArrayList<AbstractChannel> abstractChannels = new ArrayList<>(
-                        channels.stream()
-                                .map(channel -> ((AbstractChannel)channel))
-                                .collect(Collectors.toList())
+                    channels.stream()
+                        .map(channel -> ((AbstractChannel)channel))
+                        .collect(Collectors.toList())
                 );
+
+                System.err.println(abstractChannels);
 
                 this.channels.setAll(abstractChannels);
             } else if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) {
                 // For the CHANGENICKNAME response, prolly the best place to set the nickname
-                System.out.println(payload.getCommandPayload());
-                nicknameLabel.setText("Here goes my new nickname stripped from the JSON");
+                String newNickname =
+                    gson.fromJson(payload.getCommandPayload(), String.class);
+                System.out.println(newNickname);
+                nicknameLabel.setText(newNickname);
+                this.me = new User(newNickname, this.me.getUuid());
             } else if (payload.getType().equals(AdminCommand.CommandType.CREATECHANNEL)) {
                 String cmdPayload = payload.getCommandPayload();
                 Channel newlyAddedChannel =

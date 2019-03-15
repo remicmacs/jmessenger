@@ -85,7 +85,16 @@ public abstract class AbstractRoom extends AbstractChannel {
         return new ConcurrentSkipListSet<>(this.administrators);
     }
 
+    // TODO: comment
     public boolean isAdmin(User aUser) {
         return this.administrators.contains(aUser);
+    }
+
+    public boolean promoteUser(User newAdmin) {
+        return this.administrators.add(newAdmin);
+    }
+
+    public boolean demoteAdmin(User oldAdmin) {
+        return this.administrators.remove(oldAdmin);
     }
 }
