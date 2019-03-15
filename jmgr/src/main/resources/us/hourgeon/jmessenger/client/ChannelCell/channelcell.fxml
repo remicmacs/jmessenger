@@ -6,6 +6,6 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml" fx:id="vBox">
 
-    <Label fx:id="nickNameLabel"/>
+    <Label fx:id="nickNameLabel" VBox.vgrow="ALWAYS"/>
 
 </VBox>

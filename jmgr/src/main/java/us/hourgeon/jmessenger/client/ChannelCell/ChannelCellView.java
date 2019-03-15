@@ -12,6 +12,10 @@ public class ChannelCellView extends ListCell<AbstractChannel> {
         controller = new ChannelCellController(events);
     }
 
+    ChannelCellView(ChannelEvents events, boolean hasContextMenu) {
+        controller = new ChannelCellController(events, hasContextMenu);
+    }
+
     /**
      * Mandatory function for ListView's cells. Takes the contact name.
      * @param item The received message
@@ -20,6 +24,8 @@ public class ChannelCellView extends ListCell<AbstractChannel> {
     @Override
     public void updateItem(AbstractChannel item, boolean empty) {
         super.updateItem(item, empty);
+
+        prefWidthProperty().bind(getListView().widthProperty());
 
         if (!empty) {
             controller.setNickname(item.getChannelId().toString());
