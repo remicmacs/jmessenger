@@ -74,6 +74,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     Label nicknameLabel;
     @FXML
     Button joinRoomButton;
+    @FXML
+    Button quitButton;
 
     private static final ObservableList<AbstractChannel> rooms = FXCollections.observableArrayList();
     private static final ObservableList<AbstractChannel> conversations = FXCollections.observableArrayList();
@@ -100,6 +102,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     private String nickname;
     final Clipboard clipboard = Clipboard.getSystemClipboard();
     final ClipboardContent content = new ClipboardContent();
+
+    private ApplicationEvents applicationEvents;
 
 
     /**
@@ -184,6 +188,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         inviteButton.setOnAction(value -> openInviteDialog());
         testButton.setOnAction(value -> sendTestMessage());
         exportXMLButton.setOnAction(value -> exportToXML());
+        quitButton.setOnAction(value -> applicationEvents.onDisconnect());
 
         copyNickname.setOnAction(value -> {
             content.putString(me.getUuid().toString());
@@ -334,6 +339,10 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
 
+    void setApplicationEvents(ApplicationEvents events) {
+        applicationEvents = events;
+    }
+
 
     void setNickname(String nickname) {
         this.nickname = nickname;
@@ -478,6 +487,11 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
 
+    /*************************************************************************
+     * OPENING DIALOGS HERE
+     ************************************************************************/
+
+
     private void openAddChannelDialog(boolean isDirect) {
         String title = isDirect ? "Add a conversation" : "Add a room";
 
@@ -496,15 +510,11 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 ((AddChannelDialogController)loader.getController()).setDirect();
             }
             ((AddChannelDialogController)loader.getController()).setChannelEvents(this);
+            ((AddChannelDialogController)loader.getController()).setUsers(users);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-
-    /*************************************************************************
-     * OPENING DIALOGS HERE
-     ************************************************************************/
 
 
     private void openInviteDialog() {
@@ -565,10 +575,13 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
     @Override
-    public void onCreateRequest(String name, String invites, boolean isDirect, boolean isPrivate) {
+    public void onCreateRequest(String name, ArrayList<User> invites, boolean isDirect, boolean isPrivate) {
+        String invitesStr = invites.stream()
+                .map(user -> user.getNickName())
+                .collect(Collectors.joining("\n"));
         System.out.println("Create channel !");
         System.out.println("Name : " + name);
-        System.out.println("Invites : " + invites);
+        System.out.println("Invites : " + invitesStr);
         System.out.println("Is direct : " + isDirect);
         System.out.println("Is private : " + isPrivate);
 
