@@ -17,7 +17,7 @@ public class PublicRoom extends AbstractRoom {
         super(uuid, initialSubscribers, initialAdmins, alias);
     }
 
-    PublicRoom(UUID uuid, Collection<User> initialAdmins) {
+    private PublicRoom(UUID uuid, Collection<User> initialAdmins) {
         this(uuid, initialAdmins, initialAdmins, "PublicRoom#" + uuid);
     }
 

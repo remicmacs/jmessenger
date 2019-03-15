@@ -2,13 +2,13 @@ package us.hourgeon.jmessenger.Model;
 
 import java.util.Collection;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public abstract class AbstractRoom extends AbstractChannel {
     /**
      * Administrators of the Room
      */
-    private final CopyOnWriteArraySet<User> administrators;
+    private final ConcurrentSkipListSet<User> administrators;
 
     /**
      * Alias name of the Room
@@ -31,7 +31,7 @@ public abstract class AbstractRoom extends AbstractChannel {
         String alias
     ) {
         super(uuid, initialSubscribers);
-        this.administrators = new CopyOnWriteArraySet<>(initialAdmins);
+        this.administrators = new ConcurrentSkipListSet<>(initialAdmins);
         this.alias = alias;
     }
 
@@ -47,7 +47,7 @@ public abstract class AbstractRoom extends AbstractChannel {
         Collection<User> initialAdmins
     ) {
         super(uuid, initialSubscribers);
-        this.administrators = new CopyOnWriteArraySet<>(initialAdmins);
+        this.administrators = new ConcurrentSkipListSet<>(initialAdmins);
         this.alias = "Room#" + this.getChannelId();
     }
 
@@ -82,7 +82,7 @@ public abstract class AbstractRoom extends AbstractChannel {
      */
     public Collection<User> getAdministrators() {
         // Defensive copy
-        return new CopyOnWriteArraySet<>(this.administrators);
+        return new ConcurrentSkipListSet<>(this.administrators);
     }
 
     public boolean isAdmin(User aUser) {

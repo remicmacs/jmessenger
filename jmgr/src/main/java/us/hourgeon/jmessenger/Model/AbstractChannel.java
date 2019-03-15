@@ -5,13 +5,12 @@ import java.util.Collections;
 import java.util.SortedSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 public abstract class AbstractChannel implements Channel {
     /**
      * Users currently listening to the Channel.
      */
-    private final CopyOnWriteArraySet<User> subscribers;
+    private final ConcurrentSkipListSet<User> subscribers;
 
     /**
      * Messages history ordered by creation time
@@ -37,8 +36,8 @@ public abstract class AbstractChannel implements Channel {
             SortedSet<Message> history
     ) {
         this.uuid = uuid;
-        this.subscribers = new CopyOnWriteArraySet<User>(initialSubscribers);
-        this.history = new ConcurrentSkipListSet<Message>(history);
+        this.subscribers = new ConcurrentSkipListSet<>(initialSubscribers);
+        this.history = new ConcurrentSkipListSet<>(history);
     }
 
     /**
@@ -94,9 +93,9 @@ public abstract class AbstractChannel implements Channel {
     }
 
     @Override
-    public CopyOnWriteArraySet<User> getSubscribers() {
+    public ConcurrentSkipListSet<User> getSubscribers() {
         // Defensive copy of subscribers
-        return new CopyOnWriteArraySet<>(this.subscribers);
+        return new ConcurrentSkipListSet<>(this.subscribers);
     }
 
     public boolean subscribeUser(User newSubscriber) {
@@ -106,7 +105,6 @@ public abstract class AbstractChannel implements Channel {
     public boolean appendMessage(Message incomingMessage) {
         return this.history.add(incomingMessage);
     }
-
 
     @Override
     public String toString() {
@@ -141,5 +139,16 @@ public abstract class AbstractChannel implements Channel {
             }
         }
         return sb.append("}\n").toString();
+    }
+
+    @Override
+    public int compareTo(Channel channel) {
+        return this.getChannelId().compareTo(channel.getChannelId());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof AbstractChannel) &&
+            (((AbstractChannel) o).compareTo(this) == 0);
     }
 }

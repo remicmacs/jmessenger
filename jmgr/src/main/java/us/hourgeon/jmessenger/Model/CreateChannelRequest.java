@@ -23,15 +23,14 @@ public class CreateChannelRequest {
 
     /**
      * Constructor
-     * @param initSubscribers
-     * @param alias
+     * @param alias the alias of the new Channel
      * @param isPrivate
      * @param isDirect
      */
     public CreateChannelRequest(Collection<User> invites,
                                 String alias, boolean isPrivate,
                                 boolean isDirect) {
-        this.invites = new ArrayList<User>(invites);
+        this.invites = new ArrayList<>(invites);
         this.alias = alias;
         this.isPrivate = isPrivate;
         this.isDirect = isDirect;

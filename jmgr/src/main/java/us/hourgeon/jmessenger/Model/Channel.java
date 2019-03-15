@@ -1,9 +1,10 @@
 package us.hourgeon.jmessenger.Model;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public interface Channel {
+public interface Channel extends Comparable<Channel> {
 
     /**
      * Get the channel ID
@@ -28,7 +29,7 @@ public interface Channel {
      * Channel.
      * @return subscribers of the Channel
      */
-    CopyOnWriteArraySet<User> getSubscribers();
+    ConcurrentSkipListSet<User> getSubscribers();
 
     /**
      * Add a message to the history of the channel

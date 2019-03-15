@@ -23,7 +23,7 @@ public class PublishMessageRunnable implements Runnable {
     final private Gson gson = new GsonBuilder().registerTypeAdapter(
         ZonedDateTime.class, new ZDTAdapter()).create();
 
-    public PublishMessageRunnable(Message message, ChatServer chatServerInstance) {
+    PublishMessageRunnable(Message message, ChatServer chatServerInstance) {
         this.message = message;
         this.chatServerInstance = chatServerInstance;
     }
@@ -32,7 +32,9 @@ public class PublishMessageRunnable implements Runnable {
     public void run() {
         System.err.println("Launch publish standard message");
 
-        if (this.message.getDestinationUUID().equals(this.chatServerInstance.getGeneralChannel().getChannelId())) {
+        if (this.message.getDestinationUUID()
+            .equals(this.chatServerInstance.getGeneralChannel().getChannelId())
+        ) {
             this.broadcastMessageToGeneral();
         } else {
             this.publishMessage();
@@ -41,14 +43,9 @@ public class PublishMessageRunnable implements Runnable {
     }
 
     private void publishMessage() {
-        Channel theChannel = null;
-
-        for(Channel aChannel : this.chatServerInstance.getOpenChannels()) {
-            if (aChannel.getChannelId().equals(message.getDestinationUUID())) {
-                theChannel = aChannel;
-                break;
-            }
-        }
+        Channel theChannel =
+            this.chatServerInstance.getOpenChannels()
+                .get(this.message.getDestinationUUID());
 
         if (theChannel != null) {
             for(WebSocket currentConnection :
@@ -66,7 +63,7 @@ public class PublishMessageRunnable implements Runnable {
 
     private void broadcastMessageToGeneral() {
         this.chatServerInstance.broadcast(this.gson.toJson(message,
-                Message.class));
+            Message.class));
         System.err.println("Message posted in shoutbox for all to see");
     }
 }

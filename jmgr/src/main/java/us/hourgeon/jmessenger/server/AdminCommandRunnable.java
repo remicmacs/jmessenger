@@ -10,7 +10,6 @@ import us.hourgeon.jmessenger.Model.*;
 import java.lang.reflect.Type;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 /**
@@ -52,18 +51,23 @@ public class AdminCommandRunnable implements Runnable {
      */
     private Message response = null;
 
+    /**
+     * Command decoded by the runnable
+     */
     private AdminCommand adminCommand = null;
 
     /**
      * Constructor
      * @param adminMessage {@link AdminCommandRunnable#adminMessage}
      * @param serverInstance {@link AdminCommandRunnable#serverInstance}
-     * @param connection
+     * @param connection the Websocket connected to requesting User
      */
     AdminCommandRunnable(
-            Message adminMessage,
-            ChatServer serverInstance,
-            WebSocket connection) {
+        Message adminMessage,
+        ChatServer serverInstance,
+        WebSocket connection
+    ) {
+
         this.serverInstance = serverInstance;
         this.adminMessage = adminMessage;
         this.sender = connection.getAttachment();
@@ -120,7 +124,7 @@ public class AdminCommandRunnable implements Runnable {
                     new TypeToken<ArrayList<Channel>>() {}.getType();
                 payload =
                     gson.toJson(
-                        new ArrayList<Channel>(
+                        new ArrayList<>(
                             this.getAccessibleChannels()), channelListToken
                     );
                 break;
@@ -196,16 +200,16 @@ public class AdminCommandRunnable implements Runnable {
 
         } else { // newChannel instanceof DirectMessageConversation
             // Filter channels to find if DM Channel already exists
-            CopyOnWriteArraySet<Channel> directMessageUsersGroups =
-                this.serverInstance.getOpenChannels().stream()
+            Set<Channel> directMessageUsersGroups =
+                this.serverInstance.getOpenChannels().values().stream()
                     .filter(channel -> channel instanceof DirectMessageConversation)
                     .filter(channel ->
                         (channel.getSubscribers().size() == ccr.getInvites().size())
                     )
                     .filter(
                         channel -> channel.getSubscribers()
-                            .equals(new CopyOnWriteArraySet<>(ccr.getInvites()))
-                    ).collect(Collectors.toCollection(CopyOnWriteArraySet::new)
+                            .equals(new TreeSet<>(ccr.getInvites()))
+                    ).collect(Collectors.toCollection(TreeSet::new)
                 );
 
             // If a DM Channel was found with a subscriber set exactly the
@@ -229,7 +233,7 @@ public class AdminCommandRunnable implements Runnable {
     // TODO: Implement invite logic
     private void sendInvites(Collection<User> invites) {
         invites.forEach((User aUser)
-            -> System.err.println("Sending an invite to " + aUser.getNickName())
+            -> System.err.println("Sending an invite to " + aUser)
         );
     }
 
@@ -265,8 +269,10 @@ public class AdminCommandRunnable implements Runnable {
     private List<Channel> getAccessibleChannels() {
 
         // Recovering list of channel
-        CopyOnWriteArraySet<Channel> channelList =
-            this.serverInstance.getOpenChannels();
+        Set<Channel> channelList =
+            new TreeSet<>(
+                this.serverInstance.getOpenChannels().values()
+            );
 
         return channelList.stream()
             // Filter out Channel forbidden to user

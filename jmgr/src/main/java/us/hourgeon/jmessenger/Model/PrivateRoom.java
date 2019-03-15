@@ -1,15 +1,14 @@
 package us.hourgeon.jmessenger.Model;
 
 import java.util.Collection;
-import java.util.SortedSet;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class PrivateRoom extends AbstractRoom {
     /**
      * Users authorized to subscribe to this Channel
      */
-    private final CopyOnWriteArraySet<User> authorizedUsers;
+    private final ConcurrentSkipListSet<User> authorizedUsers;
 
     /**
      * Complete constructor
@@ -28,7 +27,7 @@ public class PrivateRoom extends AbstractRoom {
             alias
         );
         this.authorizedUsers =
-            new CopyOnWriteArraySet<>(initialAuthorizedUsers);
+            new ConcurrentSkipListSet<>(initialAuthorizedUsers);
     }
 
     /**
@@ -84,9 +83,9 @@ public class PrivateRoom extends AbstractRoom {
      * Getter for the list of authorized Users
      * @return {@link PrivateRoom#authorizedUsers}
      */
-    public CopyOnWriteArraySet<User> getAuthorizedUsers() {
+    public ConcurrentSkipListSet<User> getAuthorizedUsers() {
         // Defensive copy
-        return new CopyOnWriteArraySet<>(this.authorizedUsers);
+        return new ConcurrentSkipListSet<>(this.authorizedUsers);
     }
 
     public boolean isAuthorized(User aUser) {

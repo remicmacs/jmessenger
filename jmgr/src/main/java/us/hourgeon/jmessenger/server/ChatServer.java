@@ -10,7 +10,7 @@ import us.hourgeon.jmessenger.Model.*;
 import java.net.InetSocketAddress;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -32,8 +32,8 @@ public class ChatServer extends WebSocketServer {
 
     private final int serverPortNumber;
 
-    private final CopyOnWriteArraySet<Channel> openChannels =
-        new CopyOnWriteArraySet<>();
+    private final ConcurrentHashMap<UUID, Channel> openChannels =
+        new ConcurrentHashMap<>();
 
     private final PublicRoom generalChannel;
 
@@ -84,7 +84,7 @@ public class ChatServer extends WebSocketServer {
             Collections.emptyList(),
             "General"
         );
-        this.openChannels.add(generalChannel);
+        this.openChannels.put(generalChannel.getChannelId(), generalChannel);
         this.generalChannel = generalChannel;
     }
 
@@ -256,10 +256,10 @@ public class ChatServer extends WebSocketServer {
     }
 
     void addChannel(Channel newChannel) {
-        this.openChannels.add(newChannel);
+        this.openChannels.put(newChannel.getChannelId(), newChannel);
     }
 
-    CopyOnWriteArraySet<Channel> getOpenChannels() {
+    ConcurrentHashMap<UUID, Channel> getOpenChannels() {
         return this.openChannels;
     }
 
