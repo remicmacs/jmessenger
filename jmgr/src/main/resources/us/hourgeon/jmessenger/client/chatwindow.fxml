@@ -4,17 +4,39 @@
 <?import javafx.scene.layout.*?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 <SplitPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
            fx:controller="us.hourgeon.jmessenger.client.ChatWindowController"
            prefHeight="Infinity" prefWidth="Infinity" dividerPositions="0.2, 0.8">
 
     <VBox fx:id="leftPanel"
-          spacing="10"
           alignment="TOP_CENTER"
           prefWidth="300">
 
-        <Label fx:id="nicknameLabel">Username</Label>
+        <HBox alignment="BASELINE_LEFT">
+            <padding>
+                <Insets top="8" bottom="8" left="16" right="16"/>
+            </padding>
+            <Label fx:id="nicknameLabel" alignment="BASELINE_CENTER">
+                <font>
+                    <Font size="14.0"/>
+                </font>
+            </Label>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="quitButton">
+                <graphic>
+                    <ImageView>
+                        <image>
+                            <Image url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/System-log-out-2.svg/16px-System-log-out-2.svg.png"/>
+                        </image>
+                    </ImageView>
+                </graphic>
+            </Button>
+        </HBox>
+
 
         <ScrollPane VBox.vgrow="ALWAYS"
                     hbarPolicy="NEVER">
@@ -32,6 +54,9 @@
         </ScrollPane>
 
         <HBox>
+            <padding>
+                <Insets top="8" bottom="8" left="16" right="16"/>
+            </padding>
             <Button fx:id="addConvoButton">Add conversation</Button>
             <Button fx:id="addRoomButton">Add room</Button>
             <Button fx:id="joinRoomButton">Join room</Button>
@@ -42,8 +67,16 @@
     <VBox spacing="10">
         <VBox VBox.vgrow="ALWAYS">
 
-            <HBox>
-                <Label fx:id="roomLabel"/>
+            <HBox alignment="BASELINE_LEFT">
+                <padding>
+                    <Insets top="8" bottom="8" left="16" right="16"/>
+                </padding>
+                <Label fx:id="roomLabel"  alignment="BASELINE_CENTER">
+                    <font>
+                        <Font size="18.0"/>
+                    </font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS"/>
                 <Button fx:id="exportXMLButton">Export to XML</Button>
             </HBox>
 
@@ -70,6 +103,18 @@
           spacing="10"
           alignment="TOP_CENTER"
           prefWidth="300">
+
+        <HBox alignment="BASELINE_CENTER">
+            <padding>
+                <Insets top="8" bottom="8" left="16" right="16"/>
+            </padding>
+            <Label>
+                <font>
+                    <Font size="14.0"/>
+                </font>
+                Participants
+            </Label>
+        </HBox>
 
         <ListView fx:id="contactsList"
                   prefWidth="300" VBox.vgrow="ALWAYS" stylesheets="@MessageCell/transparentlistview.css">

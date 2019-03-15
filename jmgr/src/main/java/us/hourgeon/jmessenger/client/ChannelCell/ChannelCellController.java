@@ -98,6 +98,10 @@ class ChannelCellController {
         imageView.setImage(newImage);
     }
 
+    void hideImage() {
+        imageView.setVisible(false);
+    }
+
     HBox getBox() {
         return vBox;
     }

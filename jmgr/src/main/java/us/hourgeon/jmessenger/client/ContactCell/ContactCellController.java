@@ -7,7 +7,10 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.ContextMenuEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import us.hourgeon.jmessenger.Model.User;
 import us.hourgeon.jmessenger.client.ContactEvents;
@@ -17,9 +20,10 @@ import java.io.IOException;
 class ContactCellController {
     @FXML
     private Label nickNameLabel;
-
     @FXML
-    private VBox vBox;
+    private HBox vBox;
+    @FXML
+    private ImageView imageView;
 
     private ContextMenu contextMenu = new ContextMenu();
     private ContactEvents events;
@@ -76,7 +80,19 @@ class ContactCellController {
         this.user = user;
     }
 
-    VBox getBox() {
+    void setImageUrl(String url) {
+        Image newImage = new Image(getClass().getResource(url).toExternalForm());
+        imageView.setFitHeight(16);
+        imageView.setPreserveRatio(true);
+        imageView.setImage(newImage);
+    }
+
+    void hideImage() {
+        imageView.setVisible(false);
+        imageView.setManaged(false);
+    }
+
+    HBox getBox() {
         return vBox;
     }
 }

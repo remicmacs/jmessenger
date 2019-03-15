@@ -156,11 +156,14 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             // Ideally, everything should be bound but if it is not, this is were we manually
             // set the current room and chat window content and stuff like that
             AbstractChannel room = (AbstractChannel)currentRoom.getValue();
-            roomLabel.setText(room.getChannelId().toString());
-            messages.clear();
+            updateChannelLabel();
+            updateXMLExportVisibility();
+
             messages.setAll(room.getHistory().getMessages());
-            participants.clear();
             participants.setAll(room.getSubscribers());
+
+            // Reset the cell factories to adapt their views to the new data
+            contactsList.setCellFactory(new ContactCellFactory(this, isAdmin(), (AbstractRoom)room));
             messagesList.setCellFactory(new MessageCellFactory(participants));
         });
 
@@ -193,20 +196,60 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     private void initializeLists() {
         // Fill the lists with fake data
         for (int i = 0; i < 7; i++) {
-            //participants.add(new User("Contact " + i, UUID.randomUUID()));
             //conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
-            //rooms.add(new PublicRoom(Collections.emptyList()));
-            /**rooms.add(new PrivateRoom(UUID.randomUUID(),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    Collections.emptyList()));*/
         }
 
-        // Default setting on start
-        //roomsList.getSelectionModel().select(0);
-        roomsList.setPlaceholder(new Label(""));
-
         showLoaded();
+    }
+
+
+    /**
+     * Check if the user is the current room's admin. In case of a direct messages
+     * conversation, this will return false.
+     * @return True if the user is the room's admin, False otherwise
+     */
+    private boolean isAdmin() {
+        Channel channel = (Channel)currentRoom.getValue();
+        if (channel instanceof AbstractRoom) {
+            return ((AbstractRoom) channel).isAdmin(me);
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+     * Update the channel label. If it is a room, the channel's alias is taken.
+     * Otherwise, it will build a string made from the name of the participants
+     */
+    private void updateChannelLabel() {
+        Channel channel = (Channel)currentRoom.getValue();
+        if (channel instanceof AbstractRoom) {
+            roomLabel.setText(((AbstractRoom) channel).getAlias());
+        } else {
+            String title = channel.getSubscribers().stream()
+                    .filter(user -> !user.equals(me))
+                    .map(User::getNickName)
+                    .collect(Collectors.joining(", "));
+
+            roomLabel.setText(title);
+        }
+    }
+
+
+    /**
+     * Update the XML export button's visibility.
+     * If the user is the admin of the current channel or if the current
+     * channel is a direct message conversation, it will show the export
+     * button
+     */
+    private void updateXMLExportVisibility() {
+        Channel channel = (Channel)currentRoom.getValue();
+        if (channel instanceof AbstractRoom) {
+            exportXMLButton.setVisible(((AbstractRoom) channel).isAdmin(me));
+        } else {
+            exportXMLButton.setVisible(true);
+        }
     }
 
 
@@ -275,7 +318,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void sendTestMessage() {
-        request("CHANNELLIST", "");
+        //request("CHANNELLIST", "");
 
         nicknameLabel.setText(nickname);
     }
