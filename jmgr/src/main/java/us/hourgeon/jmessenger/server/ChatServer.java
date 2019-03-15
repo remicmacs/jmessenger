@@ -204,16 +204,8 @@ public class ChatServer extends WebSocketServer {
                 new AdminCommandRunnable(inMessage, this, conn)
             );
         } else {
-            // For now messages are modified on arrival because client is not
-            // yet aware of UUIDs attributed to channels
-            Message udpdatedInMessage = new Message(
-                inMessage.getAuthorUUID(),
-                this.generalChannel.getChannelId(),
-                inMessage.getPayload(),
-                inMessage.getTimestamp()
-            );
             this.submitTask(
-                new PublishMessageRunnable(udpdatedInMessage, this)
+                new PublishMessageRunnable(inMessage, this)
             );
         }
     }

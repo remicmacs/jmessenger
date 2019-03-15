@@ -56,7 +56,7 @@ public class PublishMessageRunnable implements Runnable {
                 User attachedUser = currentConnection.getAttachment();
                 if (theChannel.getSubscribers().contains(attachedUser)) {
                     currentConnection.send(this.gson.toJson(message,
-                            Message.class));
+                        Message.class));
 
                     System.err.println("Standard message sent");
                 }
@@ -66,7 +66,7 @@ public class PublishMessageRunnable implements Runnable {
 
     private void broadcastMessageToGeneral() {
         this.chatServerInstance.broadcast(this.gson.toJson(message,
-                Message.class));
+            Message.class));
         System.err.println("Message posted in shoutbox for all to see");
     }
 }
