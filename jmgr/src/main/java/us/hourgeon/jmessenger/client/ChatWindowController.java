@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -11,6 +12,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -95,6 +98,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     private static final UUID adminChannelUUID = new UUID(0,0);
 
     private String nickname;
+    final Clipboard clipboard = Clipboard.getSystemClipboard();
+    final ClipboardContent content = new ClipboardContent();
 
 
     /**
@@ -113,7 +118,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         messagesList.setItems(messages);
 
         // Set the cell factory of the messages list to a fancy custom cell
-        messagesList.setCellFactory(new MessageCellFactory());
+        messagesList.setCellFactory(new MessageCellFactory(users));
         contactsList.setCellFactory(new ContactCellFactory(this));
         roomsList.setCellFactory(new ChannelCellFactory(this));
         conversationsList.setCellFactory(new ChannelCellFactory(this));
@@ -141,6 +146,10 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         // automatically
         currentRoom = first.selectedItemProperty();
 
+        ContextMenu nicknameMenu = new ContextMenu();
+        MenuItem copyNickname = new MenuItem("Copy UUID in clipboard");
+        nicknameMenu.getItems().setAll(copyNickname);
+
         // Add a listener to a selection change (just for testing now)
         first.selectedItemProperty().addListener((observableValue, old, neww) -> {
             // Here must be implemented any events following the selection of a room
@@ -152,6 +161,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             messages.setAll(room.getHistory().getMessages());
             participants.clear();
             participants.setAll(room.getSubscribers());
+            messagesList.setCellFactory(new MessageCellFactory(participants));
         });
 
         // Configure the chat entry field to send the messages
@@ -171,6 +181,12 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         inviteButton.setOnAction(value -> openInviteDialog());
         testButton.setOnAction(value -> sendTestMessage());
         exportXMLButton.setOnAction(value -> exportToXML());
+
+        copyNickname.setOnAction(value -> {
+            content.putString(me.getUuid().toString());
+            clipboard.setContent(content);
+        });
+        nicknameLabel.setOnContextMenuRequested(event -> nicknameMenu.show(nicknameLabel, event.getScreenX(), event.getScreenY()));
     }
 
 
@@ -353,6 +369,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 ArrayList<Channel> channels = gson.fromJson(cmdPayload,
                     channelListToken);
 
+                rooms.clear();
+
                 for (Channel channel:channels) {
                     for (User user:channel.getSubscribers()) {
                         if (user.equals(me)) {
@@ -418,7 +436,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void openAddChannelDialog(boolean isDirect) {
-        request("CHANNELLIST", "");
         String title = isDirect ? "Add a conversation" : "Add a room";
 
         final Stage dialog = new Stage();
@@ -470,6 +487,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void openJoinChannelDialog() {
+        request("CHANNELLIST", "");
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
 
