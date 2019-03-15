@@ -26,9 +26,17 @@ class ChannelCellController {
 
     private UUID uuid;
 
+    private boolean hasContextMenu = true;
+
     ChannelCellController(ChannelEvents events) {
         this();
         this.events = events;
+    }
+
+    ChannelCellController(ChannelEvents events, boolean hasContextMenu) {
+        this();
+        this.events = events;
+        this.hasContextMenu = hasContextMenu;
     }
 
     /**
@@ -52,7 +60,9 @@ class ChannelCellController {
         vBox.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
             @Override
             public void handle(ContextMenuEvent event) {
-                contextMenu.show(vBox, event.getScreenX(), event.getScreenY());
+                if (hasContextMenu) {
+                    contextMenu.show(vBox, event.getScreenX(), event.getScreenY());
+                }
             }
         });
 

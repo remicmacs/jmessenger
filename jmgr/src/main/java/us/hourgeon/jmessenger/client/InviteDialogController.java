@@ -24,21 +24,16 @@ public class InviteDialogController {
     @FXML
     Button inviteButton;
 
-    private final static ObservableList<User> users = FXCollections.observableArrayList();
+    private static ObservableList<User> users = FXCollections.observableArrayList();
     private AbstractChannel channel;
 
     ContactEvents events;
 
     public void initialize() {
-        usersList.setItems(users);
         usersList.setCellFactory(new ContactCellFactory(events, false));
         usersList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         usersList.setPlaceholder(new Label("Loading..."));
 
-        for (int i=0; i < 10; i++) {
-            User newUser = new User("User " + i, UUID.randomUUID());
-            users.add(newUser);
-        }
         inviteButton.setOnAction(value -> {
             ArrayList<User> selected = new ArrayList<>(usersList.getSelectionModel().getSelectedItems());
             ((Stage)inviteButton.getScene().getWindow()).close();
@@ -52,5 +47,10 @@ public class InviteDialogController {
 
     void setEvents(ContactEvents events) {
         this.events = events;
+    }
+
+    void setUsers(ObservableList<User> users) {
+        this.users = users;
+        usersList.setItems(users);
     }
 }

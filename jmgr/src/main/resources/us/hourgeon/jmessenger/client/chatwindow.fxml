@@ -3,10 +3,11 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
+<?import javafx.geometry.Insets?>
 <SplitPane xmlns="http://javafx.com/javafx"
-          xmlns:fx="http://javafx.com/fxml"
-          fx:controller="us.hourgeon.jmessenger.client.ChatWindowController"
-          prefHeight="Infinity" prefWidth="Infinity" dividerPositions="0.2, 0.8">
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="us.hourgeon.jmessenger.client.ChatWindowController"
+           prefHeight="Infinity" prefWidth="Infinity" dividerPositions="0.2, 0.8">
 
     <VBox fx:id="leftPanel"
           spacing="10"
@@ -33,6 +34,7 @@
         <HBox>
             <Button fx:id="addConvoButton">Add conversation</Button>
             <Button fx:id="addRoomButton">Add room</Button>
+            <Button fx:id="joinRoomButton">Join room</Button>
             <Button fx:id="testButton">Test</Button>
         </HBox>
     </VBox>

@@ -53,7 +53,7 @@ public class PublishMessageRunnable implements Runnable {
                 User attachedUser = currentConnection.getAttachment();
                 if (theChannel.getSubscribers().contains(attachedUser)) {
                     currentConnection.send(this.gson.toJson(message,
-                            Message.class));
+                        Message.class));
 
                     System.err.println("Standard message sent");
                 }

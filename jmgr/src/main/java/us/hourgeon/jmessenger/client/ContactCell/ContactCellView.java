@@ -27,6 +27,8 @@ public class ContactCellView extends ListCell<User> {
     public void updateItem(User item, boolean empty) {
         super.updateItem(item, empty);
 
+        prefWidthProperty().bind(getListView().widthProperty().subtract(2));
+
         if (!empty) {
             controller.setNickname(item.getNickName());
             controller.setUser(item);

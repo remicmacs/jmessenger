@@ -22,6 +22,7 @@ import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.Model.*;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -68,6 +69,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     Button exportXMLButton;
     @FXML
     Label nicknameLabel;
+    @FXML
+    Button joinRoomButton;
 
     private static final ObservableList<AbstractChannel> rooms = FXCollections.observableArrayList();
     private static final ObservableList<AbstractChannel> conversations = FXCollections.observableArrayList();
@@ -81,6 +84,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     private User me = new User("me", new UUID(0,0));
 
     private static final ObservableList<User> users = FXCollections.observableArrayList();
+    private static final ObservableList<AbstractChannel> channels = FXCollections.observableArrayList();
 
     private static final Gson gson =
         new GsonBuilder().registerTypeAdapter(
@@ -161,6 +165,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         chatEntrySendButton.setOnAction(value -> send());
         addRoomButton.setOnAction(value -> openAddChannelDialog(false));
         addConvoButton.setOnAction(value -> openAddChannelDialog(true));
+        joinRoomButton.setOnAction(value -> openJoinChannelDialog());
         inviteButton.setOnAction(value -> openInviteDialog());
         testButton.setOnAction(value -> sendTestMessage());
         exportXMLButton.setOnAction(value -> exportToXML());
@@ -170,17 +175,17 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     private void initializeLists() {
         // Fill the lists with fake data
         for (int i = 0; i < 7; i++) {
-            participants.add(new User("Contact " + i, UUID.randomUUID()));
+            //participants.add(new User("Contact " + i, UUID.randomUUID()));
             conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
-            rooms.add(new PublicRoom(Collections.emptyList()));
-            rooms.add(new PrivateRoom(UUID.randomUUID(),
+            //rooms.add(new PublicRoom(Collections.emptyList()));
+            /**rooms.add(new PrivateRoom(UUID.randomUUID(),
                     Collections.emptyList(),
                     Collections.emptyList(),
-                    Collections.emptyList()));
+                    Collections.emptyList()));*/
         }
 
         // Default setting on start
-        roomsList.getSelectionModel().select(0);
+        //roomsList.getSelectionModel().select(0);
         roomsList.setPlaceholder(new Label(""));
 
         showLoaded();
@@ -291,6 +296,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             Message wsMessage = new Message(me, room, message, ZonedDateTime.now());
 
             String toSend = gson.toJson(wsMessage, Message.class);
+            System.err.println("=== In ChatWindowController: " + toSend + "\n");
             this.webSocketController.send(toSend);
         }
     }
@@ -304,7 +310,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     @Override
     public void onMessage(String message) {
         // TODO: Remove this annoying dump whenever possible ffs
-        //System.err.println("=== In ChatWindowController: " + message + "\n");
+        System.err.println("=== In ChatWindowController: " + message + "\n");
 
         AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
@@ -329,6 +335,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 System.err.println("User new UUID : " + receivedMessage.getAuthorUUID());
                 me = new User("me", receivedMessage.getAuthorUUID());
                 request("CHANNELLIST", "");
+                request("USERLIST", "");
                 request("CHANGENICKNAME", nickname);
                 initializeLists();
             } else if (
@@ -342,8 +349,13 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 ArrayList<Channel> channels = gson.fromJson(cmdPayload,
                     channelListToken);
 
-                // TODO: Remove example code and replace by real logic
-                channels.forEach(System.err::println);
+                ArrayList<AbstractChannel> abstractChannels = new ArrayList<>(
+                        channels.stream()
+                                .map(channel -> ((AbstractChannel)channel))
+                                .collect(Collectors.toList())
+                );
+
+                this.channels.setAll(abstractChannels);
             } else if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) {
                 // For the CHANGENICKNAME response, prolly the best place to set the nickname
                 System.out.println(payload.getCommandPayload());
@@ -354,6 +366,14 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                     gson.fromJson(cmdPayload, Channel.class);
 
                 System.err.println("Newly added channel:: " + newlyAddedChannel);
+                rooms.add((AbstractChannel)newlyAddedChannel);
+            } else if (payload.getType().equals(AdminCommand.CommandType.USERLIST)) {
+                String cmdPayload = payload.getCommandPayload();
+                Type channelListToken =
+                        new TypeToken<ArrayList<User>>() {}.getType();
+                ArrayList<User> users = gson.fromJson(cmdPayload,
+                        channelListToken);
+                this.users.setAll(users);
             }
 
         } else {
@@ -404,6 +424,11 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
 
+    /*************************************************************************
+     * OPENING DIALOGS HERE
+     ************************************************************************/
+
+
     private void openInviteDialog() {
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
@@ -418,6 +443,27 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
             ((InviteDialogController)loader.getController()).setChannel((AbstractChannel)currentRoom.getValue());
             ((InviteDialogController)loader.getController()).setEvents(this);
+            ((InviteDialogController)loader.getController()).setUsers(users);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void openJoinChannelDialog() {
+        final Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("joindialog.fxml"));
+        try {
+            Parent root = loader.load();
+
+            dialog.setTitle("Join a room");
+            dialog.setScene(new Scene(root, 400, 250));
+            dialog.show();
+
+            ((JoinDialogController)loader.getController()).setEvents(this);
+            ((JoinDialogController)loader.getController()).setChannelsList(channels);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -473,6 +519,11 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         // (... dumbass language)
         String toSend = gson.toJson(message, Message.class);
         this.webSocketController.send(toSend);
+    }
+
+    @Override
+    public void onJoinRequest(UUID uuid) {
+        System.out.println("Request joining " + uuid.toString());
     }
 
     @Override
