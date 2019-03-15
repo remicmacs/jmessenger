@@ -3,9 +3,15 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.Label?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml" fx:id="vBox">
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 
-    <Label fx:id="nickNameLabel" VBox.vgrow="ALWAYS"/>
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml" fx:id="vBox" spacing="10">
 
-</VBox>
+    <ImageView fx:id="imageView">
+        <Image url="@empty.png" requestedHeight="16" preserveRatio="true"/>
+    </ImageView>
+    <Label fx:id="nickNameLabel"/>
+
+</HBox>

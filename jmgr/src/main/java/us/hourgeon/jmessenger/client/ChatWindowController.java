@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -11,6 +12,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -94,6 +97,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     private static final UUID adminChannelUUID = new UUID(0,0);
 
     private String nickname;
+    final Clipboard clipboard = Clipboard.getSystemClipboard();
+    final ClipboardContent content = new ClipboardContent();
 
 
     /**
@@ -112,13 +117,13 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         messagesList.setItems(messages);
 
         // Set the cell factory of the messages list to a fancy custom cell
-        messagesList.setCellFactory(new MessageCellFactory());
+        messagesList.setCellFactory(new MessageCellFactory(users));
         contactsList.setCellFactory(new ContactCellFactory(this));
         roomsList.setCellFactory(new ChannelCellFactory(this));
         conversationsList.setCellFactory(new ChannelCellFactory(this));
 
         // We set the height of the roomsList as the number of rooms times the height of a row
-        roomsList.prefHeightProperty().bind(Bindings.size(rooms).multiply(24));
+        roomsList.prefHeightProperty().bind(Bindings.size(rooms).multiply(32).add(0));
 
         // We set the height of the conversationsList as the number of conversations times the height of a row
         conversationsList.prefHeightProperty().bind(Bindings.size(conversations).multiply(24));
@@ -140,15 +145,25 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         // automatically
         currentRoom = first.selectedItemProperty();
 
+        ContextMenu nicknameMenu = new ContextMenu();
+        MenuItem copyNickname = new MenuItem("Copy UUID in clipboard");
+        nicknameMenu.getItems().setAll(copyNickname);
+
         // Add a listener to a selection change (just for testing now)
         first.selectedItemProperty().addListener((observableValue, old, neww) -> {
             // Here must be implemented any events following the selection of a room
             // Ideally, everything should be bound but if it is not, this is were we manually
             // set the current room and chat window content and stuff like that
             AbstractChannel room = (AbstractChannel)currentRoom.getValue();
-            roomLabel.setText(room.getChannelId().toString());
+            updateChannelLabel();
+            updateXMLExportVisibility();
+
             messages.setAll(room.getHistory().getMessages());
             participants.setAll(room.getSubscribers());
+
+            // Reset the cell factories to adapt their views to the new data
+            contactsList.setCellFactory(new ContactCellFactory(this, isAdmin(), (AbstractRoom)room));
+            messagesList.setCellFactory(new MessageCellFactory(participants));
         });
 
         // Configure the chat entry field to send the messages
@@ -168,26 +183,72 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         inviteButton.setOnAction(value -> openInviteDialog());
         testButton.setOnAction(value -> sendTestMessage());
         exportXMLButton.setOnAction(value -> exportToXML());
+
+        copyNickname.setOnAction(value -> {
+            content.putString(me.getUuid().toString());
+            clipboard.setContent(content);
+        });
+        nicknameLabel.setOnContextMenuRequested(event -> nicknameMenu.show(nicknameLabel, event.getScreenX(), event.getScreenY()));
     }
 
 
     private void initializeLists() {
         // Fill the lists with fake data
         for (int i = 0; i < 7; i++) {
-            //participants.add(new User("Contact " + i, UUID.randomUUID()));
-            conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
-            //rooms.add(new PublicRoom(Collections.emptyList()));
-            /**rooms.add(new PrivateRoom(UUID.randomUUID(),
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    Collections.emptyList()));*/
+            //conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
         }
 
-        // Default setting on start
-        //roomsList.getSelectionModel().select(0);
-        roomsList.setPlaceholder(new Label(""));
-
         showLoaded();
+    }
+
+
+    /**
+     * Check if the user is the current room's admin. In case of a direct messages
+     * conversation, this will return false.
+     * @return True if the user is the room's admin, False otherwise
+     */
+    private boolean isAdmin() {
+        Channel channel = (Channel)currentRoom.getValue();
+        if (channel instanceof AbstractRoom) {
+            return ((AbstractRoom) channel).isAdmin(me);
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+     * Update the channel label. If it is a room, the channel's alias is taken.
+     * Otherwise, it will build a string made from the name of the participants
+     */
+    private void updateChannelLabel() {
+        Channel channel = (Channel)currentRoom.getValue();
+        if (channel instanceof AbstractRoom) {
+            roomLabel.setText(((AbstractRoom) channel).getAlias());
+        } else {
+            String title = channel.getSubscribers().stream()
+                    .filter(user -> !user.equals(me))
+                    .map(User::getNickName)
+                    .collect(Collectors.joining(", "));
+
+            roomLabel.setText(title);
+        }
+    }
+
+
+    /**
+     * Update the XML export button's visibility.
+     * If the user is the admin of the current channel or if the current
+     * channel is a direct message conversation, it will show the export
+     * button
+     */
+    private void updateXMLExportVisibility() {
+        Channel channel = (Channel)currentRoom.getValue();
+        if (channel instanceof AbstractRoom) {
+            exportXMLButton.setVisible(((AbstractRoom) channel).isAdmin(me));
+        } else {
+            exportXMLButton.setVisible(true);
+        }
     }
 
 
@@ -256,8 +317,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void sendTestMessage() {
-        request("CHANNELLIST", "");
-        //request("CHANGENICKNAME", nickname);
+        //request("CHANNELLIST", "");
 
         nicknameLabel.setText(nickname);
     }
@@ -332,7 +392,10 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             // data like the list of channels and informations about the user
             if (payload.getType().equals(AdminCommand.CommandType.CONNECT)) {
                 System.err.println("User new UUID : " + receivedMessage.getAuthorUUID());
-                me = new User("me", receivedMessage.getAuthorUUID());
+                me = new User(nickname, receivedMessage.getAuthorUUID());
+                nicknameLabel.setText("User#" + receivedMessage.getAuthorUUID());
+                roomsList.setCellFactory(new ChannelCellFactory(this, true, me));
+                conversationsList.setCellFactory(new ChannelCellFactory(this, true, me));
                 request("CHANNELLIST", "");
                 request("USERLIST", "");
                 request("CHANGENICKNAME", nickname);
@@ -348,15 +411,29 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 ArrayList<Channel> channels = gson.fromJson(cmdPayload,
                     channelListToken);
 
+                rooms.clear();
+
+                for (Channel channel:channels) {
+                    for (User user:channel.getSubscribers()) {
+                        if (user.equals(me)) {
+                            rooms.add((AbstractChannel)channel);
+                        }
+                    }
+                }
+
                 ArrayList<AbstractChannel> abstractChannels = new ArrayList<>(
                     channels.stream()
                         .map(channel -> ((AbstractChannel)channel))
                         .collect(Collectors.toList())
                 );
 
-                System.err.println(abstractChannels);
+                channels.forEach(System.err::println);
 
                 this.channels.setAll(abstractChannels);
+
+                if (currentRoom.getValue() == null) {
+                    roomsList.getSelectionModel().select(0);
+                }
             } else if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) {
                 // For the CHANGENICKNAME response, prolly the best place to set the nickname
                 String newNickname =
@@ -434,6 +511,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void openInviteDialog() {
+        request("USERLIST", "");
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
 
@@ -455,6 +533,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void openJoinChannelDialog() {
+        request("CHANNELLIST", "");
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
 
