@@ -199,7 +199,6 @@ public class AdminCommandRunnable implements Runnable {
             CopyOnWriteArraySet<Channel> directMessageUsersGroups =
                 this.serverInstance.getOpenChannels().stream()
                     .filter(channel -> channel instanceof DirectMessageConversation)
-                    .collect(Collectors.toSet()).stream()
                     .filter(channel ->
                         (channel.getSubscribers().size() == ccr.getInvites().size())
                     )
