@@ -7,7 +7,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.ContextMenuEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import us.hourgeon.jmessenger.client.ChannelEvents;
 
@@ -19,7 +22,10 @@ class ChannelCellController {
     private Label nickNameLabel;
 
     @FXML
-    private VBox vBox;
+    private HBox vBox;
+
+    @FXML
+    private ImageView imageView;
 
     private ContextMenu contextMenu = new ContextMenu();
     private ChannelEvents events;
@@ -52,9 +58,8 @@ class ChannelCellController {
             throw new RuntimeException(e);
         }
 
-        MenuItem removeItem = new MenuItem("Remove");
         MenuItem quitItem = new MenuItem("Quit");
-        contextMenu.getItems().addAll(removeItem, quitItem);
+        contextMenu.getItems().addAll(quitItem);
 
         // When user right-click on Circle
         vBox.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
@@ -63,13 +68,6 @@ class ChannelCellController {
                 if (hasContextMenu) {
                     contextMenu.show(vBox, event.getScreenX(), event.getScreenY());
                 }
-            }
-        });
-
-        removeItem.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                events.onDeleteRequest(uuid);
             }
         });
 
@@ -89,7 +87,18 @@ class ChannelCellController {
         this.uuid = uuid;
     }
 
-    VBox getBox() {
+    void setHasContextMenu(boolean hasContextMenu) {
+        this.hasContextMenu = hasContextMenu;
+    }
+
+    void setImageUrl(String url) {
+        Image newImage = new Image(getClass().getResource(url).toExternalForm());
+        imageView.setFitHeight(16);
+        imageView.setPreserveRatio(true);
+        imageView.setImage(newImage);
+    }
+
+    HBox getBox() {
         return vBox;
     }
 }

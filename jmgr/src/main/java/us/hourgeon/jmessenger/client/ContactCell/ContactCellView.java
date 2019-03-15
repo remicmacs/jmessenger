@@ -27,15 +27,14 @@ public class ContactCellView extends ListCell<User> {
     public void updateItem(User item, boolean empty) {
         super.updateItem(item, empty);
 
-        prefWidthProperty().bind(getListView().widthProperty().subtract(2));
+        prefWidthProperty().bind(getListView().widthProperty().subtract(24));
 
         if (!empty) {
             controller.setNickname(item.getNickName());
             controller.setUser(item);
+            setGraphic(controller.getBox());
         } else {
             setGraphic(null);
         }
-
-        setGraphic(controller.getBox());
     }
 }

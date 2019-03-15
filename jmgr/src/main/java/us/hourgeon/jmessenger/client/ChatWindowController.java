@@ -119,7 +119,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         conversationsList.setCellFactory(new ChannelCellFactory(this));
 
         // We set the height of the roomsList as the number of rooms times the height of a row
-        roomsList.prefHeightProperty().bind(Bindings.size(rooms).multiply(24));
+        roomsList.prefHeightProperty().bind(Bindings.size(rooms).multiply(32).add(0));
 
         // We set the height of the conversationsList as the number of conversations times the height of a row
         conversationsList.prefHeightProperty().bind(Bindings.size(conversations).multiply(24));
@@ -148,7 +148,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             // set the current room and chat window content and stuff like that
             AbstractChannel room = (AbstractChannel)currentRoom.getValue();
             roomLabel.setText(room.getChannelId().toString());
+            messages.clear();
             messages.setAll(room.getHistory().getMessages());
+            participants.clear();
             participants.setAll(room.getSubscribers());
         });
 
@@ -176,7 +178,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         // Fill the lists with fake data
         for (int i = 0; i < 7; i++) {
             //participants.add(new User("Contact " + i, UUID.randomUUID()));
-            conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
+            //conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
             //rooms.add(new PublicRoom(Collections.emptyList()));
             /**rooms.add(new PrivateRoom(UUID.randomUUID(),
                     Collections.emptyList(),
@@ -258,7 +260,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
     private void sendTestMessage() {
         request("CHANNELLIST", "");
-        //request("CHANGENICKNAME", nickname);
 
         nicknameLabel.setText(nickname);
     }
@@ -333,7 +334,10 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             // data like the list of channels and informations about the user
             if (payload.getType().equals(AdminCommand.CommandType.CONNECT)) {
                 System.err.println("User new UUID : " + receivedMessage.getAuthorUUID());
-                me = new User("me", receivedMessage.getAuthorUUID());
+                me = new User(nickname, receivedMessage.getAuthorUUID());
+                nicknameLabel.setText("User#" + receivedMessage.getAuthorUUID());
+                roomsList.setCellFactory(new ChannelCellFactory(this, true, me));
+                conversationsList.setCellFactory(new ChannelCellFactory(this, true, me));
                 request("CHANNELLIST", "");
                 request("USERLIST", "");
                 request("CHANGENICKNAME", nickname);
@@ -349,13 +353,26 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 ArrayList<Channel> channels = gson.fromJson(cmdPayload,
                     channelListToken);
 
+                for (Channel channel:channels) {
+                    for (User user:channel.getSubscribers()) {
+                        if (user.equals(me)) {
+                            rooms.add((AbstractChannel)channel);
+                        }
+                    }
+                }
+
                 ArrayList<AbstractChannel> abstractChannels = new ArrayList<>(
                         channels.stream()
                                 .map(channel -> ((AbstractChannel)channel))
                                 .collect(Collectors.toList())
                 );
 
+                channels.forEach(System.err::println);
                 this.channels.setAll(abstractChannels);
+
+                if (currentRoom.getValue() == null) {
+                    roomsList.getSelectionModel().select(0);
+                }
             } else if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) {
                 // For the CHANGENICKNAME response, prolly the best place to set the nickname
                 System.out.println(payload.getCommandPayload());
@@ -401,6 +418,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void openAddChannelDialog(boolean isDirect) {
+        request("CHANNELLIST", "");
         String title = isDirect ? "Add a conversation" : "Add a room";
 
         final Stage dialog = new Stage();
@@ -430,6 +448,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void openInviteDialog() {
+        request("USERLIST", "");
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
 
