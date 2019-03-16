@@ -4,7 +4,6 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -143,7 +142,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         // The currentRoom will hold the selection from the conversations/rooms list
         // We'll bind the room label to the selected room property so that it will update
         // automatically
-        currentRoom = first.selectedItemProperty();
+        this.currentRoom = first.selectedItemProperty();
 
         ContextMenu nicknameMenu = new ContextMenu();
         MenuItem copyNickname = new MenuItem("Copy UUID in clipboard");
@@ -371,7 +370,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         // TODO: Remove this annoying dump whenever possible ffs
         System.err.println("=== In ChatWindowController: " + message + "\n");
 
-        AbstractChannel room = (AbstractChannel)currentRoom.getValue();
+        AbstractChannel currentRoom = (AbstractChannel) this.currentRoom.getValue();
 
         // Deserializing message
         Message receivedMessage = gson.fromJson(message, Message.class);
@@ -408,30 +407,54 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 String cmdPayload = payload.getCommandPayload();
                 Type channelListToken =
                     new TypeToken<ArrayList<Channel>>() {}.getType();
-                ArrayList<Channel> channels = gson.fromJson(cmdPayload,
+                ArrayList<Channel> receivedChannels = gson.fromJson(cmdPayload,
                     channelListToken);
 
+                // Why is this working if we discard all rooms even before
+                // checking if they have a history to update ?
                 rooms.clear();
 
-                for (Channel channel:channels) {
-                    for (User user:channel.getSubscribers()) {
-                        if (user.equals(me)) {
-                            rooms.add((AbstractChannel)channel);
-                        }
-                    }
+                receivedChannels
+                    .stream().filter(channel -> channel.isSubscribed(me))
+                    .forEach(channel -> rooms.add((AbstractChannel) channel));
+
+                Set<AbstractChannel> newChannels = receivedChannels.stream()
+                    .map(channel -> ((AbstractChannel) channel))
+                    .collect(Collectors.toCollection(TreeSet::new));
+
+                receivedChannels.forEach(System.err::println);
+
+                Set<AbstractChannel> pastChannels =
+                    new TreeSet<>(ChatWindowController.channels);
+
+                // Intersection of old channels with new ones
+                // The set that will be iterated on has only the channels
+                // that are worth checking
+                pastChannels.retainAll(newChannels);
+
+                // Test if something needs doing
+                if (pastChannels.size() != receivedChannels.size()) {
+
+                    // Essentially nested for loops
+                    // Trade-off between network load and CPU load
+                    newChannels.forEach(newChannel -> {
+                        Optional<AbstractChannel> oldChannel = pastChannels
+                                .stream()
+                                .filter(c -> c.equals(newChannel))
+                                .findFirst();
+
+                        oldChannel.ifPresent(
+                            c -> c.getHistory().getMessages()
+                                .forEach(newChannel::appendMessage)
+                        );
+                    });
+
+                    ChatWindowController.channels.setAll(newChannels);
                 }
 
-                ArrayList<AbstractChannel> abstractChannels = new ArrayList<>(
-                    channels.stream()
-                        .map(channel -> ((AbstractChannel)channel))
-                        .collect(Collectors.toList())
-                );
 
-                channels.forEach(System.err::println);
 
-                this.channels.setAll(abstractChannels);
-
-                if (currentRoom.getValue() == null) {
+                if (this.currentRoom.getValue() == null) {
                     roomsList.getSelectionModel().select(0);
                 }
             } else if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) {
@@ -475,7 +498,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
             // Add the message and set the scrolling to the bottom
             messages.add(receivedMessage);
-            room.appendMessage(receivedMessage);
+            currentRoom.appendMessage(receivedMessage);
             messagesList.scrollTo(messages.size());
         }
     }
@@ -684,7 +707,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             // root element
             Element rootElement = doc.createElement("messages");
             Attr channelUUID = doc.createAttribute("channelUUID");
-            channelUUID.setValue(((AbstractChannel)currentRoom.getValue()).getChannelId().toString());
+            channelUUID.setValue(((AbstractChannel)this.currentRoom.getValue()).getChannelId().toString());
             rootElement.setAttributeNode(channelUUID);
             doc.appendChild(rootElement);
 
