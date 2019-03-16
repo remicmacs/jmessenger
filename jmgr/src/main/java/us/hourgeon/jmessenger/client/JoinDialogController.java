@@ -33,7 +33,7 @@ public class JoinDialogController {
     public void initialize() {
         channelsList.setCellFactory(new ChannelCellFactory(events, false));
         channelsList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-        channelsList.setPlaceholder(new Label("Loading..."));
+        channelsList.setPlaceholder(new Label("No rooms to join..."));
 
         joinButton.setOnAction(value -> {
             Channel channel = (Channel)channelsList.getSelectionModel().getSelectedItem();

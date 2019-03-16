@@ -4,7 +4,6 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -21,7 +20,6 @@ import javafx.stage.Stage;
 import javafx.util.Pair;
 import us.hourgeon.jmessenger.Model.AdminCommand;
 import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellFactory;
-import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellView;
 import us.hourgeon.jmessenger.client.ContactCell.ContactCellFactory;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.Model.*;
@@ -50,13 +48,13 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     @FXML
     Button testButton;
     @FXML
-    ListView roomsList;
+    ListView<AbstractChannel> roomsList;
     @FXML
-    ListView conversationsList;
+    ListView<AbstractChannel> conversationsList;
     @FXML
-    ListView contactsList;
+    ListView<User> contactsList;
     @FXML
-    ListView messagesList;
+    ListView<Message> messagesList;
     @FXML
     TextArea chatEntryField;
     @FXML
@@ -101,10 +99,13 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     private static final UUID adminChannelUUID = new UUID(0,0);
 
     private String nickname;
-    final Clipboard clipboard = Clipboard.getSystemClipboard();
-    final ClipboardContent content = new ClipboardContent();
+    private final Clipboard clipboard = Clipboard.getSystemClipboard();
+    private final ClipboardContent content = new ClipboardContent();
 
     private ApplicationEvents applicationEvents;
+
+    private boolean filterUsers = false;
+    private Channel newlyAddedChannel;
 
 
     /**
@@ -175,7 +176,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         addConvoButton.setOnAction(value -> openAddChannelDialog(true));
         joinRoomButton.setOnAction(value -> openJoinChannelDialog());
         inviteButton.setOnAction(value -> openInviteDialog());
-        testButton.setOnAction(value -> sendTestMessage());
         exportXMLButton.setOnAction(value -> exportToXML());
         quitButton.setOnAction(value -> applicationEvents.onDisconnect());
 
@@ -190,15 +190,15 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
     private void initializeLists() {
         // Fill the lists with fake data
-        for (int i = 0; i < 7; i++) {
-            //conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
-        }
+        /*for (int i = 0; i < 7; i++) {
+            conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
+        }*/
 
         showLoaded();
     }
 
 
-    /*************************************************************************
+    /*
      * UTILS FUNCTIONS HERE
      ************************************************************************/
 
@@ -230,14 +230,14 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             return rooms.stream()
                     .filter(abstractChannel -> abstractChannel.getChannelId().equals(uuid))
                     .findFirst()
-                    .get();
+                    .orElse(null);
         } else if (conversations.stream().map(AbstractChannel::getChannelId)
                 .collect(Collectors.toList())
                 .contains(uuid)) {
             return conversations.stream()
                     .filter(abstractChannel -> abstractChannel.getChannelId().equals(uuid))
                     .findFirst()
-                    .get();
+                    .orElse(null);
         } else {
             System.err.println("Channel not found, gasp !");
             return null;
@@ -245,7 +245,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
 
-    /*************************************************************************
+    /*
      * UI FUNCTIONS HERE
      ************************************************************************/
 
@@ -257,6 +257,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         AbstractChannel room = (AbstractChannel)currentRoom.getValue();
         updateChannelLabel();
         updateXMLExportVisibility();
+        updateInviteButtonVisibility();
 
         messages.setAll(room.getHistory().getMessages());
         participants.setAll(room.getSubscribers());
@@ -300,6 +301,23 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             exportXMLButton.setVisible(((AbstractRoom) channel).isAdmin(me));
         } else {
             exportXMLButton.setVisible(true);
+        }
+    }
+
+
+    /**
+     * Update the visibility of the invite button.
+     * In a private room, if the user is admin, the button should be
+     * showing. In any other case, it should be hidden
+     */
+    private void updateInviteButtonVisibility() {
+        Channel channel = (Channel)currentRoom.getValue();
+        if (channel instanceof PrivateRoom) {
+            inviteButton.setVisible(((AbstractRoom) channel).isAdmin(me));
+            inviteButton.setManaged(((AbstractRoom) channel).isAdmin(me));
+        } else {
+            inviteButton.setVisible(false);
+            inviteButton.setManaged(false);
         }
     }
 
@@ -365,14 +383,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         messagesList.setPlaceholder(new Label("Welcome to this channel. Start chatting to see the messages displayed here"));
 
         unlockAll();
-    }
-
-
-    // TODO: remove button
-    private void sendTestMessage() {
-        request("HISTORY",
-            ((AbstractChannel) this.currentRoom.get()).getChannelId().toString()
-        );
     }
 
 
@@ -454,6 +464,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 request("CHANNELLIST", "");
                 request("USERLIST", "");
                 initializeLists();
+
+            } else if (payload.getType().equals(AdminCommand.CommandType.QUIT)) {
+                roomsList.getSelectionModel().select(0);
             } else if (
                 payload.getType().equals(AdminCommand.CommandType.CHANNELLIST)
             ) {
@@ -482,17 +495,22 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                         }
                     });
 
-                ArrayList<AbstractChannel> abstractChannels = channels.stream()
+                ChatWindowController.channels.setAll(channels.stream()
                         .map(channel -> ((AbstractChannel) channel))
-                        .collect(Collectors.toCollection(ArrayList::new));
+                        .filter(channel -> !channel.isSubscribed(me))
+                        .collect(Collectors.toList()));
 
-                channels.forEach(System.err::println);
-                ChatWindowController.channels.setAll(abstractChannels);
-
-                // TODO: Here we should check if we're now pointing to the defunct channel and change if it is the case
-
-                if (currentRoom.getValue() == null) {
+                if (currentRoom.getValue() == null && rooms.size() > 0) {
                     roomsList.getSelectionModel().select(0);
+                }
+
+                if (newlyAddedChannel != null) {
+                    if (newlyAddedChannel instanceof AbstractRoom) {
+                        roomsList.getSelectionModel().select((AbstractChannel)newlyAddedChannel);
+                    } else {
+                        conversationsList.getSelectionModel().select((AbstractChannel)newlyAddedChannel);
+                    }
+                    newlyAddedChannel = null;
                 }
             } else if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) { // Handles CHANGENICKNAME
 
@@ -502,7 +520,14 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 System.out.println(newNickname);
                 nicknameLabel.setText(newNickname);
                 this.me = new User(newNickname, this.me.getUuid());
-            } else if (payload.getType().equals(AdminCommand.CommandType.CREATECHANNEL)) {
+
+            } else if (payload.getType().equals(AdminCommand.CommandType.CREATECHANNEL)) {  // Handles CREATECHANNEL
+
+                String cmdPayload = payload.getCommandPayload();
+                newlyAddedChannel = gson.fromJson(cmdPayload, Channel.class);
+
+                System.err.println("Newly added channel:: " + newlyAddedChannel);
+
                 request("CHANNELLIST", "");
 
             } else if (payload.getType().equals(AdminCommand.CommandType.USERLIST)) {       // Handles USERLIST
@@ -512,9 +537,20 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                         new TypeToken<ArrayList<User>>() {}.getType();
                 ArrayList<User> users = gson.fromJson(cmdPayload,
                         channelListToken);
-                ChatWindowController.users.setAll(users);
 
-            } else if (payload.getType().equals(AdminCommand.CommandType.HISTORY)) { // Handles HISTORY
+                if (filterUsers) {
+                    ChatWindowController.users.setAll(users.stream()
+                            .filter(user -> currentRoom.getValue() != null)
+                            .filter(user -> !((AbstractChannel)currentRoom.getValue()).isSubscribed(user))
+                            .collect(Collectors.toList()));
+                } else {
+                    ChatWindowController.users.setAll(users.stream()
+                            .filter(user -> currentRoom.getValue() != null)
+                            .filter(user -> !user.equals(me))
+                            .collect(Collectors.toList()));
+                }
+
+            } else if (payload.getType().equals(AdminCommand.CommandType.HISTORY)) {        // Handles HISTORY
 
                 String cmdPayload = payload.getCommandPayload();
                 ChannelHistory channelHistory =
@@ -540,27 +576,14 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             }
 
         } else {
-            // TODO: store correct UUIDs
-            // For now does not work because list of channel client-side does
-            // not have correct UUIDs
-            if (rooms.stream().map(AbstractChannel::getChannelId)
-                .collect(Collectors.toList())
-                .contains(receivedMessage.getDestinationUUID())) {
-            } else if (conversations.stream().map(AbstractChannel::getChannelId)
-                .collect(Collectors.toList())
-                .contains(receivedMessage.getDestinationUUID())) {
-            } else {
-                System.err.println("Channel not found, gasp !");
-            }
-
-            AbstractChannel channel = getChannel(receivedMessage.getDestinationUUID());
+            // Still trying to find a way to notify rooms with new messages
+            /*AbstractChannel channel = getChannel(receivedMessage.getDestinationUUID());
             if (channel != null) {
-                ChannelCellView view;
+                //ChannelCellView view;
                 if (channel instanceof AbstractRoom) {
                     // Put the row text in bold (how to ? We'll see later)
-                    ArrayList<AbstractChannel> test = ((GroupSelectionModel<AbstractChannel>)roomsList.getSelectionModel()).getAll();
                 }
-            }
+            }*/
 
             // If the receiving channel is the currently displayed channel
             if (room.getChannelId().equals(receivedMessage.getDestinationUUID())) {
@@ -580,6 +603,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
     private void openAddChannelDialog(boolean isDirect) {
         request("USERLIST", "");
+        filterUsers = false;
         String title = isDirect ? "Add a conversation" : "Add a room";
 
         final Stage dialog = new Stage();
@@ -588,16 +612,19 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         FXMLLoader loader = new FXMLLoader(getClass().getResource("addroomdialog.fxml"));
         try {
             Parent root = loader.load();
+            AddChannelDialogController controller = loader.getController();
 
             dialog.setTitle(title);
             dialog.setScene(new Scene(root, 400, 250));
             dialog.show();
 
             if (isDirect) {
-                ((AddChannelDialogController)loader.getController()).setDirect();
+                controller.setDirect();
+            } else {
+                controller.setRoom();
             }
-            ((AddChannelDialogController)loader.getController()).setChannelEvents(this);
-            ((AddChannelDialogController)loader.getController()).setUsers(users);
+            controller.setChannelEvents(this);
+            controller.setUsers(users);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -606,6 +633,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
     private void openInviteDialog() {
         request("USERLIST", "");
+        filterUsers = true;
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
 
@@ -661,7 +689,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     @Override
     public void onCreateRequest(String name, ArrayList<User> invites, boolean isDirect, boolean isPrivate) {
         String invitesStr = invites.stream()
-                .map(user -> user.getNickName())
+                .map(User::getNickName)
                 .collect(Collectors.joining("\n"));
         System.out.println("Create channel !");
         System.out.println("Name : " + name);
@@ -721,7 +749,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
   
-    /*************************************************************************
+    /*
      * THIS WHERE WE SHOULD MAKE THE REQUESTS TO THE SERVER
      ************************************************************************/
 
@@ -753,7 +781,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
   
   
-    public void exportToXML() {
+    private void exportToXML() {
         System.out.println("Exporting to XML");
           
         try {

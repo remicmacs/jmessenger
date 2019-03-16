@@ -26,6 +26,8 @@ public class AddChannelDialogController {
     HBox privateBox;
     @FXML
     Label nameInstruction;
+    @FXML
+    Label inviteLabel;
 
     private ChannelEvents events;
     private boolean isDirect;
@@ -46,6 +48,14 @@ public class AddChannelDialogController {
 
     void setChannelEvents(ChannelEvents events) {
         this.events = events;
+    }
+
+    void setRoom() {
+        isDirect = false;
+        usersList.setVisible(false);
+        usersList.setManaged(false);
+        inviteLabel.setVisible(false);
+        inviteLabel.setManaged(false);
     }
 
     void setDirect() {
