@@ -227,7 +227,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         if (rooms.stream().map(AbstractChannel::getChannelId)
                 .collect(Collectors.toList())
                 .contains(uuid)) {
-            System.err.println("Channel found in rooms !");
             return rooms.stream()
                     .filter(abstractChannel -> abstractChannel.getChannelId().equals(uuid))
                     .findFirst()
@@ -235,7 +234,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         } else if (conversations.stream().map(AbstractChannel::getChannelId)
                 .collect(Collectors.toList())
                 .contains(uuid)) {
-            System.err.println("Channel found in rooms !");
             return conversations.stream()
                     .filter(abstractChannel -> abstractChannel.getChannelId().equals(uuid))
                     .findFirst()
@@ -414,7 +412,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             Message wsMessage = new Message(me, room, message, ZonedDateTime.now());
 
             String toSend = gson.toJson(wsMessage, Message.class);
-            System.err.println("=== Sending: " + toSend + "\n");
+            if (wsMessage.getDestinationUUID().equals(new UUID(0, 0)))
+                System.err.println("=== Sending: " + toSend + "\n");
             this.webSocketController.send(toSend);
         }
     }
@@ -427,9 +426,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
      */
     @Override
     public void onMessage(String message) {
-        // TODO: Remove this annoying dump whenever possible ffs
-        System.err.println("=== Received: " + message + "\n");
-
         AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
         // Deserializing message
@@ -450,7 +446,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             // It is also a good place to put the requests to get all the available
             // data like the list of channels and informations about the user
             if (payload.getType().equals(AdminCommand.CommandType.CONNECT)) {
-                System.err.println("User new UUID : " + receivedMessage.getAuthorUUID());
                 me = new User(nickname, receivedMessage.getAuthorUUID());
                 nicknameLabel.setText("User#" + receivedMessage.getAuthorUUID());
                 roomsList.setCellFactory(new ChannelCellFactory(this, true, me));
@@ -508,14 +503,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 nicknameLabel.setText(newNickname);
                 this.me = new User(newNickname, this.me.getUuid());
             } else if (payload.getType().equals(AdminCommand.CommandType.CREATECHANNEL)) {
-
-                /*String cmdPayload = payload.getCommandPayload();
-                Channel newlyAddedChannel =
-                    gson.fromJson(cmdPayload, Channel.class);
-
-                System.err.println("Newly added channel:: " + newlyAddedChannel);
-                rooms.add((AbstractChannel)newlyAddedChannel);*/
-
                 request("CHANNELLIST", "");
 
             } else if (payload.getType().equals(AdminCommand.CommandType.USERLIST)) {       // Handles USERLIST
@@ -547,6 +534,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 }
 
                 messagesList.scrollTo(messages.size());
+            } else if (payload.getType().equals(AdminCommand.CommandType.INVITEUSERS)) {
+                System.err.println("\n\n\tInvite received :: " + message +
+                        "\n\n");
             }
 
         } else {
@@ -556,11 +546,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             if (rooms.stream().map(AbstractChannel::getChannelId)
                 .collect(Collectors.toList())
                 .contains(receivedMessage.getDestinationUUID())) {
-                System.err.println("Channel found in rooms !");
             } else if (conversations.stream().map(AbstractChannel::getChannelId)
                 .collect(Collectors.toList())
                 .contains(receivedMessage.getDestinationUUID())) {
-                System.err.println("Channel found in rooms !");
             } else {
                 System.err.println("Channel not found, gasp !");
             }
@@ -707,10 +695,11 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         }
 
         Type channelListToken =
-                new TypeToken<Pair<AbstractChannel, ArrayList<User>>>() {}.getType();
-        Pair<AbstractChannel, ArrayList<User>> pair = new Pair<>(channel, users);
+            new TypeToken<Pair<Channel, ArrayList<User>>>() {}.getType();
+        Pair<Channel, ArrayList<User>> pair = new Pair<>(((Channel)channel),
+                users);
         String cmdPayload = gson.toJson(pair, channelListToken);
-        request("INVITE", cmdPayload);
+        request("INVITEUSERS", cmdPayload);
     }
 
     @Override
@@ -746,8 +735,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
         // We build an admin command dumper with gson
         String adminCommand = gson.toJson(
-                new AdminCommand(request, argument),
-                AdminCommand.class
+            new AdminCommand(request, argument),
+            AdminCommand.class
         );
 
         // We build a classic message with the admin command as payload

@@ -190,33 +190,54 @@ public class AdminCommandRunnable implements Runnable {
                 }
                 break;
             case INVITEUSERS:
-                AbstractChannel invitingChannel = null;
-                ArrayList<User> usersToInvite = null;
                 Type payloadType =
-                    new TypeToken<Pair<AbstractChannel, ArrayList<User>>>() {}.getType();
+                    new TypeToken<Pair<Channel, ArrayList<User>>>() {}.getType();
                 Pair<AbstractChannel, ArrayList<User>> cmdPayload =
-                        gson.fromJson(
+                    gson.fromJson(
                     this.adminCommand.getCommandPayload(),
                     payloadType
                 );
 
-                invitingChannel = cmdPayload.getKey();
-                usersToInvite = cmdPayload.getValue();
-
-                TreeSet<WebSocket> connections =
-                    new TreeSet<>(this.serverInstance.getConnections());
-
-                // NO
-                /* WIP
-                usersToInvite.retainAll(connections.stream()
-                    .map(conn -> ((User) conn.getAttachment()))
-                    .collect(Collectors.toList())
-                );
+                AbstractChannel invitingChannel =
+                    (AbstractChannel) this.serverInstance.getOpenChannels()
+                        .get(cmdPayload.getKey().getChannelId());
+                ArrayList<User> usersToInvite = cmdPayload.getValue();
 
                 usersToInvite.forEach(user -> {
-
+                    if (invitingChannel instanceof PrivateRoom &&
+                        ((PrivateRoom) invitingChannel).isAdmin(this.sender)
+                    ) {
+                        boolean success =
+                            ((PrivateRoom) invitingChannel).authorizeUser(user);
+                        if (success) {
+                            System.err.println("Successfully added user " + user);
+                        } else {
+                            System.err.println("Unsuccessfully added user " + user);
+                        }
+                    }
                 });
-                */
+
+                List<WebSocket> connections =
+                    new ArrayList<>(this.serverInstance.getConnections());
+
+                connections.stream()
+                    .filter(webSocket -> usersToInvite
+                        .contains(webSocket.getAttachment())
+                    )
+                    .forEach(webSocket -> {
+                        AdminCommand invite = new AdminCommand("INVITEUSERS",
+                            gson.toJson(invitingChannel,
+                                AbstractChannel.class));
+                        Message inviteMessage =
+                            new Message(
+                                this.sender.getUuid(),
+                                    new UUID(0, 0),
+                                    gson.toJson(invite, AdminCommand.class),
+                                    ZonedDateTime.now());
+                        webSocket.send(gson.toJson(inviteMessage, Message.class));
+                    });
+
+                this.serverInstance.broadcastChannelList();
 
                 break;
             case BANUSERS:
