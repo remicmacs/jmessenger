@@ -153,22 +153,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         MenuItem copyNickname = new MenuItem("Copy UUID in clipboard");
         nicknameMenu.getItems().setAll(copyNickname);
 
-        // Add a listener to a selection change (just for testing now)
-        first.selectedItemProperty().addListener((observableValue, old, neww) -> {
-            // Here must be implemented any events following the selection of a room
-            // Ideally, everything should be bound but if it is not, this is were we manually
-            // set the current room and chat window content and stuff like that
-            AbstractChannel room = (AbstractChannel)currentRoom.getValue();
-            updateChannelLabel();
-            updateXMLExportVisibility();
-
-            messages.setAll(room.getHistory().getMessages());
-            participants.setAll(room.getSubscribers());
-
-            // Reset the cell factories to adapt their views to the new data
-            contactsList.setCellFactory(new ContactCellFactory(this, isAdmin(), (AbstractRoom)room));
-            messagesList.setCellFactory(new MessageCellFactory(participants));
-        });
+        // Add a listener to a selection change that will update the view
+        first.selectedItemProperty().addListener((observableValue, old, neww) -> updateView());
 
         // Configure the chat entry field to send the messages
         chatEntryField.setOnKeyPressed(event -> {
@@ -180,6 +166,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 chatEntryField.appendText("\n");
             }
         });
+
+        // Bind the buttons
         chatEntrySendButton.setOnAction(value -> send());
         addRoomButton.setOnAction(value -> openAddChannelDialog(false));
         addConvoButton.setOnAction(value -> openAddChannelDialog(true));
@@ -189,6 +177,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         exportXMLButton.setOnAction(value -> exportToXML());
         quitButton.setOnAction(value -> applicationEvents.onDisconnect());
 
+        // Bind the nickname label
         copyNickname.setOnAction(value -> {
             content.putString(me.getUuid().toString());
             clipboard.setContent(content);
@@ -207,6 +196,11 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
 
+    /*************************************************************************
+     * UTILS FUNCTIONS HERE
+     ************************************************************************/
+
+
     /**
      * Check if the user is the current room's admin. In case of a direct messages
      * conversation, this will return false.
@@ -219,6 +213,59 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         } else {
             return false;
         }
+    }
+
+
+    /**
+     * Get a channel based on it's uuid
+     * @param uuid The uuid for the channel we're searching
+     * @return The AbstractChannel we were searching for
+     */
+    private AbstractChannel getChannel(UUID uuid) {
+        if (rooms.stream().map(AbstractChannel::getChannelId)
+                .collect(Collectors.toList())
+                .contains(uuid)) {
+            System.err.println("Channel found in rooms !");
+            return rooms.stream()
+                    .filter(abstractChannel -> abstractChannel.getChannelId().equals(uuid))
+                    .findFirst()
+                    .get();
+        } else if (conversations.stream().map(AbstractChannel::getChannelId)
+                .collect(Collectors.toList())
+                .contains(uuid)) {
+            System.err.println("Channel found in rooms !");
+            return conversations.stream()
+                    .filter(abstractChannel -> abstractChannel.getChannelId().equals(uuid))
+                    .findFirst()
+                    .get();
+        } else {
+            System.err.println("Channel not found, gasp !");
+            return null;
+        }
+    }
+
+
+    /*************************************************************************
+     * UI FUNCTIONS HERE
+     ************************************************************************/
+
+
+    /**
+     * Update the whole view.
+     */
+    private void updateView() {
+        AbstractChannel room = (AbstractChannel)currentRoom.getValue();
+        updateChannelLabel();
+        updateXMLExportVisibility();
+
+        messages.setAll(room.getHistory().getMessages());
+        participants.setAll(room.getSubscribers());
+
+        // Reset the cell factories to adapt their views to the new data
+        contactsList.setCellFactory(new ContactCellFactory(this, isAdmin(), (AbstractRoom)room));
+        messagesList.setCellFactory(new MessageCellFactory(participants));
+
+        request("HISTORY", room.getChannelId().toString());
     }
 
 
@@ -430,20 +477,18 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                     }
                 }
 
-                ArrayList<AbstractChannel> abstractChannels = new ArrayList<>(
-                    channels.stream()
-                        .map(channel -> ((AbstractChannel)channel))
-                        .collect(Collectors.toList())
-                );
+                ArrayList<AbstractChannel> abstractChannels = channels.stream()
+                        .map(channel -> ((AbstractChannel) channel))
+                        .collect(Collectors.toCollection(ArrayList::new));
 
                 channels.forEach(System.err::println);
-
-                this.channels.setAll(abstractChannels);
+                ChatWindowController.channels.setAll(abstractChannels);
 
                 if (currentRoom.getValue() == null) {
                     roomsList.getSelectionModel().select(0);
                 }
-            } else if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) {
+            } else if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) { // Handles CHANGENICKNAME
+
                 // For the CHANGENICKNAME response, prolly the best place to set the nickname
                 String newNickname =
                     gson.fromJson(payload.getCommandPayload(), String.class);
@@ -451,19 +496,44 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 nicknameLabel.setText(newNickname);
                 this.me = new User(newNickname, this.me.getUuid());
             } else if (payload.getType().equals(AdminCommand.CommandType.CREATECHANNEL)) {
+
                 String cmdPayload = payload.getCommandPayload();
                 Channel newlyAddedChannel =
                     gson.fromJson(cmdPayload, Channel.class);
 
                 System.err.println("Newly added channel:: " + newlyAddedChannel);
                 rooms.add((AbstractChannel)newlyAddedChannel);
-            } else if (payload.getType().equals(AdminCommand.CommandType.USERLIST)) {
+
+            } else if (payload.getType().equals(AdminCommand.CommandType.USERLIST)) {       // Handles USERLIST
+
                 String cmdPayload = payload.getCommandPayload();
                 Type channelListToken =
                         new TypeToken<ArrayList<User>>() {}.getType();
                 ArrayList<User> users = gson.fromJson(cmdPayload,
                         channelListToken);
-                this.users.setAll(users);
+                ChatWindowController.users.setAll(users);
+
+            } else if (payload.getType().equals(AdminCommand.CommandType.HISTORY)) { // Handles HISTORY
+
+                // TODO: Replace REQUESTHISTORY by HISTORY when merged, check the deserializing of history
+                String cmdPayload = payload.getCommandPayload();
+                Type messagesListToken =
+                        new TypeToken<ArrayList<Message>>() {}.getType();
+                ArrayList<Message> messages = gson.fromJson(cmdPayload, messagesListToken);
+
+                // TODO : Replace this UUID with the one from the channel
+                UUID uuid = UUID.randomUUID();
+
+                // Adding the messages
+                AbstractChannel concernedChannel = getChannel(uuid);
+                if (concernedChannel != null) {
+                    messages.forEach(concernedChannel::appendMessage);
+
+                    // Updating the messages list view
+                    if (uuid.equals(((AbstractChannel) currentRoom.getValue()).getChannelId())) {
+                        ChatWindowController.messages.setAll(concernedChannel.getHistory().getMessages());
+                    }
+                }
             }
 
         } else {
@@ -587,13 +657,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         System.out.println("Invites : " + invitesStr);
         System.out.println("Is direct : " + isDirect);
         System.out.println("Is private : " + isPrivate);
-
-        // Initialize the list of users
-        ArrayList<User> initialUsers = new ArrayList<>();
-        initialUsers.add(this.me);
-
+        
         // Create a request object
-        CreateChannelRequest ccr = new CreateChannelRequest(initialUsers,
+        CreateChannelRequest ccr = new CreateChannelRequest(invites,
                 name, isPrivate, isDirect);
 
         // Serialize it
