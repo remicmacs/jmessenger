@@ -20,6 +20,7 @@ import javafx.stage.Stage;
 
 import us.hourgeon.jmessenger.Model.AdminCommand;
 import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellFactory;
+import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellView;
 import us.hourgeon.jmessenger.client.ContactCell.ContactCellFactory;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.Model.*;
@@ -498,12 +499,14 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 this.me = new User(newNickname, this.me.getUuid());
             } else if (payload.getType().equals(AdminCommand.CommandType.CREATECHANNEL)) {
 
-                String cmdPayload = payload.getCommandPayload();
+                /*String cmdPayload = payload.getCommandPayload();
                 Channel newlyAddedChannel =
                     gson.fromJson(cmdPayload, Channel.class);
 
                 System.err.println("Newly added channel:: " + newlyAddedChannel);
-                rooms.add((AbstractChannel)newlyAddedChannel);
+                rooms.add((AbstractChannel)newlyAddedChannel);*/
+
+                request("CHANNELLIST", "");
 
             } else if (payload.getType().equals(AdminCommand.CommandType.USERLIST)) {       // Handles USERLIST
 
@@ -548,6 +551,15 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 System.err.println("Channel found in rooms !");
             } else {
                 System.err.println("Channel not found, gasp !");
+            }
+
+            AbstractChannel channel = getChannel(receivedMessage.getDestinationUUID());
+            if (channel != null) {
+                ChannelCellView view;
+                if (channel instanceof AbstractRoom) {
+                    // Put the row text in bold (how to ? We'll see later)
+                }
+
             }
 
             // Add the message and set the scrolling to the bottom

@@ -38,8 +38,13 @@ public class MessageCellView extends ListCell<Message> {
             User messageUser = users.stream()
                 .filter(user -> user.getUuid().equals(item.getAuthorUUID()))
                 .findFirst()
-                .get();
-            controller.setInfo(messageUser.getNickName() + ":", payload);
+                .orElse(null);
+
+            if (messageUser != null) {
+                controller.setInfo(messageUser.getNickName() + ":", payload);
+            } else {
+                controller.setInfo(item.getAuthorUUID().toString() + ":", payload);
+            }
             setGraphic(controller.getBox());
         }
         else {
