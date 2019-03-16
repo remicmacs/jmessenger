@@ -470,14 +470,21 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                     channelListToken);
 
                 rooms.clear();
+                conversations.clear();
 
-                for (Channel channel:channels) {
-                    for (User user:channel.getSubscribers()) {
-                        if (user.equals(me)) {
-                            rooms.add((AbstractChannel)channel);
+                channels
+                    .stream().filter(channel -> channel.isSubscribed(me))
+                    .forEach(channel ->  {
+                        if (channel instanceof AbstractRoom) {
+                            rooms.add((AbstractChannel) channel);
+                        } else {
+                            conversations.add((AbstractChannel) channel);
                         }
-                    }
-                }
+
+                        if(channel.equals(currentRoom.getValue())) {
+                            participants.setAll(channel.getSubscribers());
+                        }
+                    });
 
                 ArrayList<AbstractChannel> abstractChannels = channels.stream()
                         .map(channel -> ((AbstractChannel) channel))
