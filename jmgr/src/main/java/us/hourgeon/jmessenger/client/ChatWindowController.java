@@ -539,9 +539,11 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
                     // Updating the messages list view
                     if (uuid.equals(((AbstractChannel) currentRoom.getValue()).getChannelId())) {
-                        ChatWindowController.messages.setAll(concernedChannel.getHistory().getMessages());
+                        messages.setAll(concernedChannel.getHistory().getMessages());
                     }
                 }
+
+                messagesList.scrollTo(messages.size());
             }
 
         } else {
