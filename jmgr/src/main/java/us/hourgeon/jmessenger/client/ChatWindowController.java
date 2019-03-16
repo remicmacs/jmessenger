@@ -452,9 +452,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 nicknameLabel.setText("User#" + receivedMessage.getAuthorUUID());
                 roomsList.setCellFactory(new ChannelCellFactory(this, true, me));
                 conversationsList.setCellFactory(new ChannelCellFactory(this, true, me));
+                request("CHANGENICKNAME", nickname);
                 request("CHANNELLIST", "");
                 request("USERLIST", "");
-                request("CHANGENICKNAME", nickname);
                 initializeLists();
             } else if (
                 payload.getType().equals(AdminCommand.CommandType.CHANNELLIST)
