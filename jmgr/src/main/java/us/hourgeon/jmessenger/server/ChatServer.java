@@ -119,17 +119,29 @@ public class ChatServer extends WebSocketServer {
         // Admin channel is a hidden channel for all commands messages
         this.generalChannel.subscribeUser(newUser);
 
-        // TODO: remove temporary block when done with tests
-        // Temporary : create test channel attached to new user
-        ArrayList<User> users = new ArrayList<>();
-        users.add(newUser);
+        // When a user connects, broadcast a channel list command for each
+        // user in order to have updated clients
+        AdminCommand broadcastChannelList = new AdminCommand(
+                "CHANNELLIST", ""
+        );
 
-        this.addChannel(new PrivateRoom(UUID.randomUUID(),users, users,
-            users, "PrivateRoom accessible by new user"));
+        String broadcast = gson.toJson(broadcastChannelList,
+                AdminCommand.class);
 
-        /*this.addChannel(new DirectMessageConversation(UUID.randomUUID(),
-                users));*/
-        // End of temporary block
+        this.getConnections().forEach( socket -> {
+            User attachedUser = socket.getAttachment();
+            Message adminMessage = new Message(
+                    attachedUser.getUuid(), new UUID(0,0),
+                    broadcast, ZonedDateTime.now());
+
+            this.submitTask(
+                    new AdminCommandRunnable(
+                            adminMessage,
+                            this,
+                            socket
+                    )
+            );
+        });
 
         // On connect, user does not send a "proper" message, so we build one
         AdminCommand connectAdminCommand = new AdminCommand(
@@ -172,10 +184,12 @@ public class ChatServer extends WebSocketServer {
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         User quittingUser = conn.getAttachment();
+        AdminCommand quitMessage = new AdminCommand("QUIT","");
+        String payload = gson.toJson(quitMessage, AdminCommand.class);
         Message closeMessage = new Message(
             quittingUser.getUuid(),
             new UUID(0,0),
-            conn + " has left the room!",
+            payload,
             ZonedDateTime.now()
         );
         broadcast( this.gson.toJson(closeMessage, Message.class));
