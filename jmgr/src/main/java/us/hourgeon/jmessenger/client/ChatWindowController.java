@@ -368,6 +368,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
 
+    // TODO: remove button
     private void sendTestMessage() {
         request("HISTORY",
             ((AbstractChannel) this.currentRoom.get()).getChannelId().toString()

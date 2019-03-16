@@ -218,7 +218,6 @@ public class ChatServer extends WebSocketServer {
         }
     }
 
-
     /**
      * Event handler for server instantiation.
      *
@@ -301,7 +300,7 @@ public class ChatServer extends WebSocketServer {
 
     // Destined to be public : other tasks will submit new runnables to
     // executor queue.
-    private void submitTask(Runnable task) {
+    public void submitTask(Runnable task) {
         this.executor.execute(task);
     }
 }

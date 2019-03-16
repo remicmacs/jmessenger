@@ -109,7 +109,7 @@ public class AdminCommandRunnable implements Runnable {
 
         // Command management
         String payload = "";
-        String type;
+        String type = null;
         switch (this.adminCommand.getType()) {
             case USERLIST:
                 payload = gson.toJson(this.getConnectedUsers());
@@ -165,16 +165,31 @@ public class AdminCommandRunnable implements Runnable {
                 AbstractChannel theChannel =
                     (AbstractChannel) this.serverInstance.getOpenChannels()
                         .get(joinChannelId);
-                boolean joinSuccess = theChannel.subscribeUser(this.sender);
+                theChannel.subscribeUser(this.sender);
 
-                if (theChannel.isSubscribed(this.sender) || joinSuccess) {
-                    type = "JOIN";
-                    payload = gson.toJson(theChannel, AbstractChannel.class);
+                AdminCommand broadcastChannelList = new AdminCommand(
+                        "CHANNELLIST", ""
+                );
 
-                } else {
-                    type = "ERROR";
-                    payload = "Join channel #" + joinChannelId + " failed";
-                }
+                String broadcast = gson.toJson(broadcastChannelList,
+                    AdminCommand.class);
+
+
+                this.serverInstance.getConnections().forEach( conn -> {
+                    User attachedUser = conn.getAttachment();
+                    Message adminMessage = new Message(
+                        attachedUser.getUuid(), new UUID(0,0),
+                        broadcast, ZonedDateTime.now());
+
+                    this.serverInstance.submitTask(
+                        new AdminCommandRunnable(
+                            adminMessage,
+                            this.serverInstance,
+                            conn
+                        )
+                    );
+                });
+
                 break;
             case QUIT:
                 UUID quitChannelId =
@@ -201,7 +216,7 @@ public class AdminCommandRunnable implements Runnable {
                 break;
         }
 
-        createResponseMessage(type, payload);
+        if (type != null) createResponseMessage(type, payload);
     }
 
     /**
