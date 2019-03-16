@@ -61,7 +61,11 @@ Pour la communication des données entre le client et le serveur, nous utilisons
   * `ChannelAdapter` permettant de sérialiser et donc d'échanger des `AbstractChannel` afin de pouvoir bénéficier des relations d'héritage de cette partie du modèle
   * `ZDTAdapter` pour la sérialisation et désérialisation des dates utilisées. Malgré le fait que le type `ZoneDateTime` fait partie de l'API Java native, elle n'est pas sérialisée automatiquement.
 
+Pour plus de détails sur le fonctionnement interne, voir la documentation fournie.
+
 #### Package `client`
+
+![Diagramme de classes du package client](client.png)
 
 Le package `client` contient trois packages qui permettent la création et la gestion des `CellFactory` et des `ListCell` pour les `ListView` de l'interface principale (voir plus bas).
 
@@ -75,8 +79,26 @@ graph TD
 	B-->G[MessageCell]
 ```
 
-Le package `server` utilise massivement le modèle de données du package `Model` pour représenter l'état actuel du serveur.
+#### Package `server`
 
+![Diagramme de classes du package server](server.png)
+
+Le package `server` est beaucoup plus restreint que les autres packages car l'essentiel des fonctionnalités de gestion sont déjà implémentées par le modèle de données.
+
+La classe principale est le `ChatServer` héritant du [`WebsocketServer` de Nathan Rajlich](https://github.com/TooTallNate/Java-WebSocket). Son implémentation nous permet de bénéficier d'un protocole applicatif websocket par-dessus le protocole de transport TCP, ce qui nous permet d'avoir la garantie de réception des messages et de pouvoir travailler avec des connexions clients *full-duplex*. [Voir la page Wikipédia pour plus de détails sur le protocole](https://en.wikipedia.org/wiki/WebSocket).
+
+Ce serveur est ensuite équipé d'un `ExecutorService` permettant de soumettre des tâches (sous forme de `Runnable`) à un groupe de threads gérés par l'exécuteur et non par nos soins.
+
+À la réception d'un message, le serveur soumet soit une tâche `PublishMessageRunnable` soit un `AdminCommandRunnable` en fonction du type de message reçu par le serveur.
+
+* `PublishMessageRunnable` se contente de diffuser un message normal à tous les utilisateurs enregistré dans le channel de destination
+* `AdminCommandRunnable` est beaucoup plus complexe et aurait gagné à être éclaté en plus de classes spécifiques. Cette classe déterminer le type de requête envoyé par le client et d'y répondre de manière appropriée.
+
+### Logique de fonctionnement
+
+En utilisant le protocole websockets permet de proposer un serveur et un client fonctionnement sur un modèle événementiel et de restreindre la gestion du parallélisme par la création de tâches répondant spécifiquement à chaque événement.
+
+Cependant nous aurions dû aller plus loin dans cette logique et implémenter un fonctionnement complètement asynchrone, à l'aide notamment des classes `Callables` et `Future` de Java. Cela aurait eu plus de cohérence qu'un serveur fonctionnant partiellement en événementiel d'une part et en logique synchrone et parallèle d'autre part. Nous avons tiré cette conclusion des problèmes de synchronisation entre client et serveur que nous avons rencontrées pour les fonctionnalités les plus complexes.
 
 ## Fonctionnalités
 
