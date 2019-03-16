@@ -3,6 +3,10 @@ package us.hourgeon.jmessenger.client;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.MultipleSelectionModel;
+import us.hourgeon.jmessenger.Model.AbstractChannel;
+
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class GroupSelectionModel<T> extends MultipleSelectionModel<T> {
 
@@ -127,5 +131,9 @@ public class GroupSelectionModel<T> extends MultipleSelectionModel<T> {
     @Override
     public void selectLast() {
         select(items.size() - 1);
+    }
+
+    public ArrayList<T> getAll() {
+        return new ArrayList<>(items);
     }
 }

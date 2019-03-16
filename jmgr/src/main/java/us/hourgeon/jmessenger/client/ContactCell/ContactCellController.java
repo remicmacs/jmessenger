@@ -67,9 +67,9 @@ class ContactCellController {
         });
 
         // Reacting to the choice on a context menu item
-        kickItem.setOnAction(actionEvent -> events.onKickRequest(user.getUuid()));
-        banItem.setOnAction(actionEvent -> events.onBanRequest(user.getUuid()));
-        promoteItem.setOnAction(actionEvent -> events.onPromoteRequest(user.getUuid()));
+        kickItem.setOnAction(actionEvent -> events.onKickRequest(user));
+        banItem.setOnAction(actionEvent -> events.onBanRequest(user));
+        promoteItem.setOnAction(actionEvent -> events.onPromoteRequest(user));
     }
 
     void setNickname(String nickname) {

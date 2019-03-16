@@ -18,6 +18,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import javafx.util.Pair;
 import us.hourgeon.jmessenger.Model.AdminCommand;
 import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellFactory;
 import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellView;
@@ -493,6 +494,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 channels.forEach(System.err::println);
                 ChatWindowController.channels.setAll(abstractChannels);
 
+                // TODO: Here we should check if we're now pointing to the defunct channel and change if it is the case
+
                 if (currentRoom.getValue() == null) {
                     roomsList.getSelectionModel().select(0);
                 }
@@ -567,8 +570,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 ChannelCellView view;
                 if (channel instanceof AbstractRoom) {
                     // Put the row text in bold (how to ? We'll see later)
+                    ArrayList<AbstractChannel> test = ((GroupSelectionModel<AbstractChannel>)roomsList.getSelectionModel()).getAll();
                 }
-
             }
 
             // If the receiving channel is the currently displayed channel
@@ -663,12 +666,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     @Override
     public void onQuitRequest(UUID uuid) {
         System.out.println("Request quitting channel " + uuid.toString());
+        request("QUIT", uuid.toString());
     }
 
-    @Override
-    public void onDeleteRequest(UUID uuid) {
-        System.out.println("Request removing channel " + uuid.toString());
-    }
 
     @Override
     public void onCreateRequest(String name, ArrayList<User> invites, boolean isDirect, boolean isPrivate) {
@@ -698,10 +698,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         request("JOIN", uuid.toString());
     }
 
-    @Override
-    public void onInviteRequest(UUID user, UUID channel) {
-        System.out.println("Request kicking " + user.toString() + " from " + channel.toString());
-    }
 
     @Override
     public void onInvitesRequest(ArrayList<User> users, AbstractChannel channel) {
@@ -709,22 +705,28 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         for (User user:users) {
             System.out.println(user.getUuid());
         }
+
+        Type channelListToken =
+                new TypeToken<Pair<AbstractChannel, ArrayList<User>>>() {}.getType();
+        Pair<AbstractChannel, ArrayList<User>> pair = new Pair<>(channel, users);
+        String cmdPayload = gson.toJson(pair, channelListToken);
+        request("INVITE", cmdPayload);
     }
 
     @Override
-    public void onKickRequest(UUID user) {
+    public void onKickRequest(User user) {
         AbstractChannel channel = (AbstractChannel)currentRoom.getValue();
         System.out.println("Request kicking " + user.toString() + " from " + channel.getChannelId().toString());
     }
 
     @Override
-    public void onBanRequest(UUID user) {
+    public void onBanRequest(User user) {
         AbstractChannel channel = (AbstractChannel)currentRoom.getValue();
         System.out.println("Request banning " + user.toString() + " from " + channel.getChannelId().toString());
     }
 
     @Override
-    public void onPromoteRequest(UUID user) {
+    public void onPromoteRequest(User user) {
         AbstractChannel channel = (AbstractChannel)currentRoom.getValue();
         System.out.println("Request promoting " + user.toString() + " from " + channel.getChannelId().toString());
     }
