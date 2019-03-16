@@ -47,13 +47,19 @@ public class PublishMessageRunnable implements Runnable {
             this.chatServerInstance.getOpenChannels()
                 .get(this.message.getDestinationUUID());
 
+
         if (theChannel != null) {
+            theChannel.appendMessage(this.message);
+
             for(WebSocket currentConnection :
-                    this.chatServerInstance.getConnections()) {
+                this.chatServerInstance.getConnections()
+            ) {
                 User attachedUser = currentConnection.getAttachment();
                 if (theChannel.getSubscribers().contains(attachedUser)) {
-                    currentConnection.send(this.gson.toJson(message,
-                        Message.class));
+                    currentConnection.send(this.gson.toJson(
+                        this.message,
+                        Message.class)
+                    );
 
                     System.err.println("Standard message sent");
                 }
@@ -64,6 +70,7 @@ public class PublishMessageRunnable implements Runnable {
     private void broadcastMessageToGeneral() {
         this.chatServerInstance.broadcast(this.gson.toJson(message,
             Message.class));
+        this.chatServerInstance.getGeneralChannel().appendMessage(message);
         System.err.println("Message posted in shoutbox for all to see");
     }
 }

@@ -317,9 +317,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void sendTestMessage() {
-        //request("CHANNELLIST", "");
-
-        nicknameLabel.setText(nickname);
+        request("HISTORY",
+            ((AbstractChannel) this.currentRoom.get()).getChannelId().toString()
+        );
     }
 
 

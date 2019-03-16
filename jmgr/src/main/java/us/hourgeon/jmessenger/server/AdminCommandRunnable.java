@@ -145,11 +145,20 @@ public class AdminCommandRunnable implements Runnable {
                     newNick,
                     this.sender.getUuid()
                 );
-                Boolean res = this.serverInstance.updateUser(updatedUser);
+                boolean res = this.serverInstance.updateUser(updatedUser);
                 payload = gson.toJson(res ? newNick : this.sender.getNickName());
                 if (res) this.connection.setAttachment(updatedUser);
                 break;
-            case REQUESTHISTORY:
+            case HISTORY:
+                type = "HISTORY";
+                UUID channelId =
+                    gson.fromJson(this.adminCommand.getCommandPayload(),
+                        UUID.class);
+                ChannelHistory requestedHistory =
+                    this.getChannelHistory(channelId);
+
+                payload = gson.toJson(requestedHistory, ChannelHistory.class);
+                break;
             default:
                 type = "ERROR";
                 payload = "NOT IMPLEMENTED";
@@ -324,4 +333,8 @@ public class AdminCommandRunnable implements Runnable {
         }).collect(Collectors.toList());
     }
 
+    private ChannelHistory getChannelHistory(UUID channelId) {
+        return this.serverInstance
+            .getOpenChannels().get(channelId).getHistory();
+    }
 }

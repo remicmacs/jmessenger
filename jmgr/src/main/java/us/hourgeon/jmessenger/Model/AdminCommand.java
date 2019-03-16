@@ -24,7 +24,7 @@ public class AdminCommand {
         INVITEUSERS("INVITEUSERS"),
         BANUSERS("BANUSERS"),
         ERROR("ERROR"),
-        REQUESTHISTORY("REQUESTHISTORY");
+        HISTORY("HISTORY");
 
         private final String typeName;
 
