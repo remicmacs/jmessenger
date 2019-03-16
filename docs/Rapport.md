@@ -25,6 +25,24 @@ Tous les messages sont sérialisés à l'aide de GSON. Tous les salons et utilis
 
 Un salon administrateur est automatiquement mis en place par le serveur à l'UUID `0x0`. Celui ci permet d'envoyer des requêtes au serveur pour la création d'un salon, l'ajout d'un utilisateur à un salon ou encore pour recevoir l'historique d'un salon.
 
+### Structure des packages
+
+Notre projet est divisé en trois packages principaux, dont deux permettant de générer un `.jar` : le `server` et le `client`.
+
+Le troisième package, `Model`, comporte toutes les classes décrivant les modèles de données qui sont susceptibles d'être utilisés par les deux précédent packages.
+
+Le package `client` contient trois packages qui permettent la création et la gestion des `CellFactory` et des `ListCell` pour les `ListView` de l'interface principale (voir plus bas).
+
+```mermaid
+graph TD
+	A[us.hourgeon.jmessenger]-->B[client]
+	A-->C[Model]
+	A-->D[server]
+	B-->E[ChannelCell]
+	B-->F[ContactCell]
+	B-->G[MessageCell]
+```
+
 ## Fonctionnalités
 
 ### Gestion des salons
