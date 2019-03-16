@@ -133,6 +133,7 @@ public class AdminCommandRunnable implements Runnable {
                 this.serverInstance.addChannel(newChannel);
                 payload = gson.toJson(newChannel, Channel.class);
                 type = "CREATECHANNEL";
+                this.serverInstance.broadcastChannelList();
                 break;
             case CHANGENICKNAME:
                 type = "CHANGENICKNAME";
@@ -145,7 +146,10 @@ public class AdminCommandRunnable implements Runnable {
                 );
                 boolean res = this.serverInstance.updateUser(updatedUser);
                 payload = gson.toJson(res ? newNick : this.sender.getNickName());
-                if (res) this.connection.setAttachment(updatedUser);
+                if (res) {
+                    this.connection.setAttachment(updatedUser);
+                    this.serverInstance.broadcastChannelList();
+                }
                 break;
             case HISTORY:
                 type = "HISTORY";

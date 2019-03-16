@@ -93,7 +93,6 @@ public class ConnectWindowController {
         }
     }
 
-
     /**
      * Set the application events listener
      * @param applicationEvents A class implementing the ApplicationEvents interface

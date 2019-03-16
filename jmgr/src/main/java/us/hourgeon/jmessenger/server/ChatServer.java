@@ -121,27 +121,7 @@ public class ChatServer extends WebSocketServer {
 
         // When a user connects, broadcast a channel list command for each
         // user in order to have updated clients
-        AdminCommand broadcastChannelList = new AdminCommand(
-                "CHANNELLIST", ""
-        );
-
-        String broadcast = gson.toJson(broadcastChannelList,
-                AdminCommand.class);
-
-        this.getConnections().forEach( socket -> {
-            User attachedUser = socket.getAttachment();
-            Message adminMessage = new Message(
-                    attachedUser.getUuid(), new UUID(0,0),
-                    broadcast, ZonedDateTime.now());
-
-            this.submitTask(
-                    new AdminCommandRunnable(
-                            adminMessage,
-                            this,
-                            socket
-                    )
-            );
-        });
+        this.broadcastChannelList();
 
         // On connect, user does not send a "proper" message, so we build one
         AdminCommand connectAdminCommand = new AdminCommand(
@@ -316,5 +296,32 @@ public class ChatServer extends WebSocketServer {
     // executor queue.
     public void submitTask(Runnable task) {
         this.executor.execute(task);
+    }
+
+    /**
+     * Send the channel list to all connected users
+     */
+    public void broadcastChannelList() {
+        AdminCommand broadcastChannelList = new AdminCommand(
+                "CHANNELLIST", ""
+        );
+
+        String broadcast = gson.toJson(broadcastChannelList,
+                AdminCommand.class);
+
+        this.getConnections().forEach( socket -> {
+            User attachedUser = socket.getAttachment();
+            Message adminMessage = new Message(
+                    attachedUser.getUuid(), new UUID(0,0),
+                    broadcast, ZonedDateTime.now());
+
+            this.submitTask(
+                    new AdminCommandRunnable(
+                            adminMessage,
+                            this,
+                            socket
+                    )
+            );
+        });
     }
 }
