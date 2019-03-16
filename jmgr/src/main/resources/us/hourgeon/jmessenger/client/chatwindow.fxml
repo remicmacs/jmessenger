@@ -30,7 +30,7 @@
                 <graphic>
                     <ImageView>
                         <image>
-                            <Image url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/System-log-out-2.svg/16px-System-log-out-2.svg.png"/>
+                            <Image url="@out.png"/>
                         </image>
                     </ImageView>
                 </graphic>

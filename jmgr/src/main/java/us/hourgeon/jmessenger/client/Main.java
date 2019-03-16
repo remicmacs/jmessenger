@@ -64,12 +64,13 @@ public class Main extends Application
     @Override
     public void onOpen(ServerHandshake handshakedata, WebSocketController webSocketController) {
         loader = new FXMLLoader(getClass().getResource("chatwindow.fxml"));
-        Parent root = null;
+        Parent root;
         try {
             root = loader.load();
             ChatWindowController controller = loader.getController();
             controller.setWebSocketController(webSocketController);
             controller.setNickname(connectWindowController.getNickname());
+            controller.setApplicationEvents(this);
 
             stage.setTitle("JMessenger Client");
             stage.getScene().setRoot(root);
@@ -139,6 +140,11 @@ public class Main extends Application
     public void onDisconnect() {
         if (webSocketController != null) {
             webSocketController.close(1000, "User closed the connection");
+        }
+        try {
+            start(stage);
+        } catch (Exception exception) {
+            exception.printStackTrace();
         }
     }
 
