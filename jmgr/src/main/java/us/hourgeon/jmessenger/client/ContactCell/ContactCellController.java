@@ -54,10 +54,9 @@ class ContactCellController {
             throw new RuntimeException(e);
         }
 
-        MenuItem kickItem = new MenuItem("Kick");
         MenuItem banItem = new MenuItem("Ban");
         MenuItem promoteItem = new MenuItem("Promote");
-        contextMenu.getItems().addAll(kickItem, banItem, promoteItem);
+        contextMenu.getItems().addAll(banItem, promoteItem);
 
         // Invoking the context menu on right-click
         vBox.setOnContextMenuRequested(event -> {
@@ -67,7 +66,6 @@ class ContactCellController {
         });
 
         // Reacting to the choice on a context menu item
-        kickItem.setOnAction(actionEvent -> events.onKickRequest(user));
         banItem.setOnAction(actionEvent -> events.onBanRequest(user));
         promoteItem.setOnAction(actionEvent -> events.onPromoteRequest(user));
     }
