@@ -22,7 +22,7 @@
 
     <Label fx:id="nameInstruction">Name of the room</Label>
     <TextField maxWidth="200" fx:id="nameField"/>
-    <Label>People to invite</Label>
+    <Label fx:id="inviteLabel">People to invite</Label>
     <ListView maxWidth="200" prefHeight="128" fx:id="usersList"/>
 
     <Button fx:id="confirmButton">Add</Button>
