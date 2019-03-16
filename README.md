@@ -1,5 +1,7 @@
 # jmessenger
 
+[GitHub](https://www.github.com/remicmacs/jmessenger)
+
 ## You need it
 
 * Java 1.8

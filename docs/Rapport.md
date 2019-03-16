@@ -5,6 +5,8 @@
 * Rémi Bourgeon
 * Rodolphe Houdas
 
+[GitHub](https://www.github.com/remicmacs/jmessenger)
+
 ## Introduction
 
 Dans le cadre du cours de Java, nous devons réaliser une messagerie instantanée. À la manière d'un logiciel comme Slack ou Riot, celui-ci doit permettre de gérer des conversations directes ou des salons.
@@ -69,15 +71,7 @@ Pour plus de détails sur le fonctionnement interne, voir la documentation fourn
 
 Le package `client` contient trois packages qui permettent la création et la gestion des `CellFactory` et des `ListCell` pour les `ListView` de l'interface principale (voir plus bas).
 
-```mermaid
-graph TD
-	A[us.hourgeon.jmessenger]-->B[client]
-	A-->C[Model]
-	A-->D[server]
-	B-->E[ChannelCell]
-	B-->F[ContactCell]
-	B-->G[MessageCell]
-```
+![Packages](packages.png)
 
 #### Package `server`
 
