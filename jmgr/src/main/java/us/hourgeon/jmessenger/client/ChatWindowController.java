@@ -4,7 +4,6 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -21,7 +20,6 @@ import javafx.stage.Stage;
 import javafx.util.Pair;
 import us.hourgeon.jmessenger.Model.AdminCommand;
 import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellFactory;
-import us.hourgeon.jmessenger.client.ChannelCell.ChannelCellView;
 import us.hourgeon.jmessenger.client.ContactCell.ContactCellFactory;
 import us.hourgeon.jmessenger.client.MessageCell.MessageCellFactory;
 import us.hourgeon.jmessenger.Model.*;
@@ -50,13 +48,13 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     @FXML
     Button testButton;
     @FXML
-    ListView roomsList;
+    ListView<AbstractChannel> roomsList;
     @FXML
-    ListView conversationsList;
+    ListView<AbstractChannel> conversationsList;
     @FXML
-    ListView contactsList;
+    ListView<User> contactsList;
     @FXML
-    ListView messagesList;
+    ListView<Message> messagesList;
     @FXML
     TextArea chatEntryField;
     @FXML
@@ -101,8 +99,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     private static final UUID adminChannelUUID = new UUID(0,0);
 
     private String nickname;
-    final Clipboard clipboard = Clipboard.getSystemClipboard();
-    final ClipboardContent content = new ClipboardContent();
+    private final Clipboard clipboard = Clipboard.getSystemClipboard();
+    private final ClipboardContent content = new ClipboardContent();
 
     private ApplicationEvents applicationEvents;
 
@@ -178,7 +176,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         addConvoButton.setOnAction(value -> openAddChannelDialog(true));
         joinRoomButton.setOnAction(value -> openJoinChannelDialog());
         inviteButton.setOnAction(value -> openInviteDialog());
-        testButton.setOnAction(value -> sendTestMessage());
         exportXMLButton.setOnAction(value -> exportToXML());
         quitButton.setOnAction(value -> applicationEvents.onDisconnect());
 
@@ -193,15 +190,15 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
     private void initializeLists() {
         // Fill the lists with fake data
-        for (int i = 0; i < 7; i++) {
-            //conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
-        }
+        /*for (int i = 0; i < 7; i++) {
+            conversations.add(new DirectMessageConversation(UUID.randomUUID(), Collections.emptyList()));
+        }*/
 
         showLoaded();
     }
 
 
-    /*************************************************************************
+    /*
      * UTILS FUNCTIONS HERE
      ************************************************************************/
 
@@ -234,7 +231,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             return rooms.stream()
                     .filter(abstractChannel -> abstractChannel.getChannelId().equals(uuid))
                     .findFirst()
-                    .get();
+                    .orElse(null);
         } else if (conversations.stream().map(AbstractChannel::getChannelId)
                 .collect(Collectors.toList())
                 .contains(uuid)) {
@@ -242,7 +239,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             return conversations.stream()
                     .filter(abstractChannel -> abstractChannel.getChannelId().equals(uuid))
                     .findFirst()
-                    .get();
+                    .orElse(null);
         } else {
             System.err.println("Channel not found, gasp !");
             return null;
@@ -250,7 +247,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
 
-    /*************************************************************************
+    /*
      * UI FUNCTIONS HERE
      ************************************************************************/
 
@@ -391,14 +388,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
 
-    // TODO: remove button
-    private void sendTestMessage() {
-        request("HISTORY",
-            ((AbstractChannel) this.currentRoom.get()).getChannelId().toString()
-        );
-    }
-
-
     /**
      * Set the websocket controller and register the appropriate events
      * @param webSocketController The websocket controller
@@ -523,9 +512,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
                 if (newlyAddedChannel != null) {
                     if (newlyAddedChannel instanceof AbstractRoom) {
-                        roomsList.getSelectionModel().select(newlyAddedChannel);
+                        roomsList.getSelectionModel().select((AbstractChannel)newlyAddedChannel);
                     } else {
-                        conversationsList.getSelectionModel().select(newlyAddedChannel);
+                        conversationsList.getSelectionModel().select((AbstractChannel)newlyAddedChannel);
                     }
                     newlyAddedChannel = null;
                 }
@@ -590,28 +579,14 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             }
 
         } else {
-            // TODO: store correct UUIDs
-            // For now does not work because list of channel client-side does
-            // not have correct UUIDs
-            if (rooms.stream().map(AbstractChannel::getChannelId)
-                .collect(Collectors.toList())
-                .contains(receivedMessage.getDestinationUUID())) {
-                System.err.println("Channel found in rooms !");
-            } else if (conversations.stream().map(AbstractChannel::getChannelId)
-                .collect(Collectors.toList())
-                .contains(receivedMessage.getDestinationUUID())) {
-                System.err.println("Channel found in rooms !");
-            } else {
-                System.err.println("Channel not found, gasp !");
-            }
-
-            AbstractChannel channel = getChannel(receivedMessage.getDestinationUUID());
+            // Still trying to find a way to notify rooms with new messages
+            /*AbstractChannel channel = getChannel(receivedMessage.getDestinationUUID());
             if (channel != null) {
-                ChannelCellView view;
+                //ChannelCellView view;
                 if (channel instanceof AbstractRoom) {
                     // Put the row text in bold (how to ? We'll see later)
                 }
-            }
+            }*/
 
             // If the receiving channel is the currently displayed channel
             if (room.getChannelId().equals(receivedMessage.getDestinationUUID())) {
@@ -717,7 +692,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     @Override
     public void onCreateRequest(String name, ArrayList<User> invites, boolean isDirect, boolean isPrivate) {
         String invitesStr = invites.stream()
-                .map(user -> user.getNickName())
+                .map(User::getNickName)
                 .collect(Collectors.joining("\n"));
         System.out.println("Create channel !");
         System.out.println("Name : " + name);
@@ -776,7 +751,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
 
   
-    /*************************************************************************
+    /*
      * THIS WHERE WE SHOULD MAKE THE REQUESTS TO THE SERVER
      ************************************************************************/
 
@@ -808,7 +783,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     }
   
   
-    public void exportToXML() {
+    private void exportToXML() {
         System.out.println("Exporting to XML");
           
         try {
