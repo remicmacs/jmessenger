@@ -13,7 +13,7 @@ public class ContactCellFactory implements Callback<ListView<User>, ListCell<Use
 
     private ContactEvents events;
     private boolean hasContextMenu = true;
-    private AbstractRoom channel;
+    private AbstractChannel channel;
 
     public ContactCellFactory(ContactEvents events) {
         this.events = events;
@@ -24,7 +24,9 @@ public class ContactCellFactory implements Callback<ListView<User>, ListCell<Use
         this.hasContextMenu = hasContextMenu;
     }
 
-    public ContactCellFactory(ContactEvents events, boolean hasContextMenu, AbstractRoom channel) {
+    public ContactCellFactory(ContactEvents events, boolean hasContextMenu,
+          AbstractChannel channel
+    ) {
         this(events);
         this.hasContextMenu = hasContextMenu;
         this.channel = channel;

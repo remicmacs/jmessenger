@@ -321,12 +321,17 @@ public class AdminCommandRunnable implements Runnable {
                 serverChannel=
                     (DirectMessageConversation) directMessageUsersGroups.toArray()[0];
             } else {
+                // TODO: should be mapped to
+                // server
+                // users
+                ArrayList<User> dmusers = (ArrayList<User>) ccr.getInvites();
+                dmusers.add(this.sender);
                 serverChannel = new DirectMessageConversation(
                     UUID.randomUUID(),
-                    ccr.getInvites() // TODO: should be mapped to server users
+                    dmusers
                 );
 
-                this.sendInvites(ccr.getInvites());
+                this.sendInvites(dmusers);
             }
         }
 
