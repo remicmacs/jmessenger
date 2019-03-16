@@ -562,10 +562,13 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
             }
 
-            // Add the message and set the scrolling to the bottom
-            messages.add(receivedMessage);
-            room.appendMessage(receivedMessage);
-            messagesList.scrollTo(messages.size());
+            // If the receiving channel is the currently displayed channel
+            if (room.getChannelId().equals(receivedMessage.getDestinationUUID())) {
+                // Add the message and set the scrolling to the bottom
+                messages.add(receivedMessage);
+                room.appendMessage(receivedMessage);
+                messagesList.scrollTo(messages.size());
+            }
         }
     }
 
@@ -576,6 +579,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
 
     private void openAddChannelDialog(boolean isDirect) {
+        request("USERLIST", "");
         String title = isDirect ? "Add a conversation" : "Add a room";
 
         final Stage dialog = new Stage();
