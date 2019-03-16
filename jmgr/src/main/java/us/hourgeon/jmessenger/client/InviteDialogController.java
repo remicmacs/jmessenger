@@ -32,7 +32,7 @@ public class InviteDialogController {
     public void initialize() {
         usersList.setCellFactory(new ContactCellFactory(events, false));
         usersList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        usersList.setPlaceholder(new Label("Loading..."));
+        usersList.setPlaceholder(new Label("Nobody to invite..."));
 
         inviteButton.setOnAction(value -> {
             ArrayList<User> selected = new ArrayList<>(usersList.getSelectionModel().getSelectedItems());

@@ -459,6 +459,8 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 request("CHANNELLIST", "");
                 request("USERLIST", "");
                 initializeLists();
+            } else if (payload.getType().equals(AdminCommand.CommandType.QUIT)) {
+                roomsList.getSelectionModel().select(0);
             } else if (
                 payload.getType().equals(AdminCommand.CommandType.CHANNELLIST)
             ) {
@@ -487,16 +489,12 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                         }
                     });
 
-                ArrayList<AbstractChannel> abstractChannels = channels.stream()
+                ChatWindowController.channels.setAll(channels.stream()
                         .map(channel -> ((AbstractChannel) channel))
-                        .collect(Collectors.toCollection(ArrayList::new));
+                        .filter(channel -> !channel.isSubscribed(me))
+                        .collect(Collectors.toList()));
 
-                channels.forEach(System.err::println);
-                ChatWindowController.channels.setAll(abstractChannels);
-
-                // TODO: Here we should check if we're now pointing to the defunct channel and change if it is the case
-
-                if (currentRoom.getValue() == null) {
+                if (currentRoom.getValue() == null && rooms.size() > 0) {
                     roomsList.getSelectionModel().select(0);
                 }
             } else if (payload.getType().equals(AdminCommand.CommandType.CHANGENICKNAME)) { // Handles CHANGENICKNAME
@@ -525,7 +523,13 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                         new TypeToken<ArrayList<User>>() {}.getType();
                 ArrayList<User> users = gson.fromJson(cmdPayload,
                         channelListToken);
-                ChatWindowController.users.setAll(users);
+
+                ChatWindowController.users.setAll(users.stream()
+                        .filter(user -> currentRoom.getValue() != null)
+                        .filter(user -> !((AbstractChannel)currentRoom.getValue()).isSubscribed(user))
+                        .collect(Collectors.toList()));
+
+                //ChatWindowController.users.setAll(users);
 
             } else if (payload.getType().equals(AdminCommand.CommandType.HISTORY)) { // Handles HISTORY
 
@@ -570,7 +574,6 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 ChannelCellView view;
                 if (channel instanceof AbstractRoom) {
                     // Put the row text in bold (how to ? We'll see later)
-                    ArrayList<AbstractChannel> test = ((GroupSelectionModel<AbstractChannel>)roomsList.getSelectionModel()).getAll();
                 }
             }
 
