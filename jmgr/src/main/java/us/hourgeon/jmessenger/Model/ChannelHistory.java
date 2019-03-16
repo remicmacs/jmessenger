@@ -64,4 +64,8 @@ public final class ChannelHistory implements Serializable {
         return ZonedDateTime.from(this.timestamp);
     }
 
+    public UUID getChannelUUID() {
+        return this.channelUUID;
+    }
+
 }

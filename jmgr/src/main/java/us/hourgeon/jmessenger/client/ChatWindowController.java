@@ -515,19 +515,16 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
 
             } else if (payload.getType().equals(AdminCommand.CommandType.HISTORY)) { // Handles HISTORY
 
-                // TODO: Replace REQUESTHISTORY by HISTORY when merged, check the deserializing of history
                 String cmdPayload = payload.getCommandPayload();
-                Type messagesListToken =
-                        new TypeToken<ArrayList<Message>>() {}.getType();
-                ArrayList<Message> messages = gson.fromJson(cmdPayload, messagesListToken);
+                ChannelHistory channelHistory =
+                    gson.fromJson(cmdPayload, ChannelHistory.class);
 
-                // TODO : Replace this UUID with the one from the channel
-                UUID uuid = UUID.randomUUID();
+                UUID uuid = channelHistory.getChannelUUID();
 
                 // Adding the messages
                 AbstractChannel concernedChannel = getChannel(uuid);
                 if (concernedChannel != null) {
-                    messages.forEach(concernedChannel::appendMessage);
+                    channelHistory.getMessages().forEach(concernedChannel::appendMessage);
 
                     // Updating the messages list view
                     if (uuid.equals(((AbstractChannel) currentRoom.getValue()).getChannelId())) {
@@ -657,7 +654,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         System.out.println("Invites : " + invitesStr);
         System.out.println("Is direct : " + isDirect);
         System.out.println("Is private : " + isPrivate);
-        
+
         // Create a request object
         CreateChannelRequest ccr = new CreateChannelRequest(invites,
                 name, isPrivate, isDirect);
