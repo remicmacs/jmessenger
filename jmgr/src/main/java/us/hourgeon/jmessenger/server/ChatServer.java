@@ -164,16 +164,6 @@ public class ChatServer extends WebSocketServer {
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         User quittingUser = conn.getAttachment();
-        AdminCommand quitMessage = new AdminCommand("QUIT","");
-        String payload = gson.toJson(quitMessage, AdminCommand.class);
-        Message closeMessage = new Message(
-            quittingUser.getUuid(),
-            new UUID(0,0),
-            payload,
-            ZonedDateTime.now()
-        );
-        broadcast( this.gson.toJson(closeMessage, Message.class));
-
         this.getConnectedUsers().remove(quittingUser);
         System.out.println( conn + " has left the room!" );
 
@@ -312,15 +302,15 @@ public class ChatServer extends WebSocketServer {
         this.getConnections().forEach( socket -> {
             User attachedUser = socket.getAttachment();
             Message adminMessage = new Message(
-                    attachedUser.getUuid(), new UUID(0,0),
-                    broadcast, ZonedDateTime.now());
+                attachedUser.getUuid(), new UUID(0,0),
+                broadcast, ZonedDateTime.now());
 
             this.submitTask(
-                    new AdminCommandRunnable(
-                            adminMessage,
-                            this,
-                            socket
-                    )
+                new AdminCommandRunnable(
+                        adminMessage,
+                        this,
+                        socket
+                )
             );
         });
     }

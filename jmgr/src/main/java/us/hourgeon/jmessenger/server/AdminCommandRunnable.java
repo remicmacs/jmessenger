@@ -3,6 +3,7 @@ package us.hourgeon.jmessenger.server;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import javafx.util.Pair;
 import org.java_websocket.WebSocket;
 import us.hourgeon.jmessenger.Model.AdminCommand;
 import us.hourgeon.jmessenger.Model.*;
@@ -169,30 +170,8 @@ public class AdminCommandRunnable implements Runnable {
                 AbstractChannel theChannel =
                     (AbstractChannel) this.serverInstance.getOpenChannels()
                         .get(joinChannelId);
-                theChannel.subscribeUser(this.sender);
-
-                AdminCommand broadcastChannelList = new AdminCommand(
-                        "CHANNELLIST", ""
-                );
-
-                String broadcast = gson.toJson(broadcastChannelList,
-                    AdminCommand.class);
-
-
-                this.serverInstance.getConnections().forEach( conn -> {
-                    User attachedUser = conn.getAttachment();
-                    Message adminMessage = new Message(
-                        attachedUser.getUuid(), new UUID(0,0),
-                        broadcast, ZonedDateTime.now());
-
-                    this.serverInstance.submitTask(
-                        new AdminCommandRunnable(
-                            adminMessage,
-                            this.serverInstance,
-                            conn
-                        )
-                    );
-                });
+                if (theChannel.subscribeUser(this.sender))
+                    this.serverInstance.broadcastChannelList();
 
                 break;
             case QUIT:
@@ -206,13 +185,40 @@ public class AdminCommandRunnable implements Runnable {
                 if (quitSuccess) {
                     type = "QUIT";
                     payload = gson.toJson(theChannel, Channel.class);
+                    this.serverInstance.broadcastChannelList();
 
-                } else {
-                    type = "ERROR";
-                    payload = "Failed to quit Channel#" + quitChannelId;
                 }
                 break;
             case INVITEUSERS:
+                AbstractChannel invitingChannel = null;
+                ArrayList<User> usersToInvite = null;
+                Type payloadType =
+                    new TypeToken<Pair<AbstractChannel, ArrayList<User>>>() {}.getType();
+                Pair<AbstractChannel, ArrayList<User>> cmdPayload =
+                        gson.fromJson(
+                    this.adminCommand.getCommandPayload(),
+                    payloadType
+                );
+
+                invitingChannel = cmdPayload.getKey();
+                usersToInvite = cmdPayload.getValue();
+
+                TreeSet<WebSocket> connections =
+                    new TreeSet<>(this.serverInstance.getConnections());
+
+                // NO
+                /* WIP
+                usersToInvite.retainAll(connections.stream()
+                    .map(conn -> ((User) conn.getAttachment()))
+                    .collect(Collectors.toList())
+                );
+
+                usersToInvite.forEach(user -> {
+
+                });
+                */
+
+                break;
             case BANUSERS:
             default:
                 type = "ERROR";
@@ -270,7 +276,7 @@ public class AdminCommandRunnable implements Runnable {
                 ccr.getAlias()
             );
             // Requester and admin are subscribed to the channel
-            ((PrivateRoom) serverChannel).subscribeUser(this.sender);
+            serverChannel.subscribeUser(this.sender);
 
             this.sendInvites(invites);
 
