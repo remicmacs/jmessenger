@@ -36,9 +36,9 @@ public class MessageCellView extends ListCell<Message> {
 
         if (!empty) {
             User messageUser = users.stream()
-                    .filter(user -> user.getUuid().equals(item.getAuthorUUID()))
-                    .findFirst()
-                    .get();
+                .filter(user -> user.getUuid().equals(item.getAuthorUUID()))
+                .findFirst()
+                .get();
             controller.setInfo(messageUser.getNickName() + ":", payload);
             setGraphic(controller.getBox());
         }

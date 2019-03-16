@@ -55,7 +55,9 @@ public class PublishMessageRunnable implements Runnable {
                 this.chatServerInstance.getConnections()
             ) {
                 User attachedUser = currentConnection.getAttachment();
-                if (theChannel.getSubscribers().contains(attachedUser)) {
+                if (theChannel.getChannelId() !=
+                    this.chatServerInstance.getGeneralChannel().getChannelId() &&
+                    theChannel.getSubscribers().contains(attachedUser)) {
                     currentConnection.send(this.gson.toJson(
                         this.message,
                         Message.class)

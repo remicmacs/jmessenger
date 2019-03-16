@@ -355,7 +355,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
             Message wsMessage = new Message(me, room, message, ZonedDateTime.now());
 
             String toSend = gson.toJson(wsMessage, Message.class);
-            System.err.println("=== In ChatWindowController: " + toSend + "\n");
+            System.err.println("=== Sending: " + toSend + "\n");
             this.webSocketController.send(toSend);
         }
     }
@@ -369,7 +369,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
     @Override
     public void onMessage(String message) {
         // TODO: Remove this annoying dump whenever possible ffs
-        System.err.println("=== In ChatWindowController: " + message + "\n");
+        System.err.println("=== Received: " + message + "\n");
 
         AbstractChannel room = (AbstractChannel)currentRoom.getValue();
 
@@ -576,7 +576,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         System.out.println("Is private : " + isPrivate);
 
         // Initialize the list of users
-        ArrayList<User> initialUsers = new ArrayList<User>();
+        ArrayList<User> initialUsers = new ArrayList<>();
         initialUsers.add(this.me);
 
         // Create a request object
@@ -586,27 +586,14 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         // Serialize it
         String adminCommandPayload = gson.toJson(ccr, CreateChannelRequest.class);
 
-        // Add it in an AdminCommand object
-        AdminCommand admCmd = new AdminCommand("CREATECHANNEL",
-                adminCommandPayload);
-
-        // Serialize it and put it in a message
-        Message message = new Message(
-                this.me.getUuid(),
-                adminChannelUUID,
-                gson.toJson(admCmd, AdminCommand.class),
-                ZonedDateTime.now()
-        );
-
-        // Serialize the message and send it (phew!)
-        // (... dumbass language)
-        String toSend = gson.toJson(message, Message.class);
-        this.webSocketController.send(toSend);
+        // Request creation
+        request("CREATECHANNEL", adminCommandPayload);
     }
 
     @Override
     public void onJoinRequest(UUID uuid) {
         System.out.println("Request joining " + uuid.toString());
+        request("JOIN", uuid.toString());
     }
 
     @Override

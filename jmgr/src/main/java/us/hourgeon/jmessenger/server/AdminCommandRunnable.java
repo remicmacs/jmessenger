@@ -134,8 +134,6 @@ public class AdminCommandRunnable implements Runnable {
                 payload = gson.toJson(newChannel, Channel.class);
                 type = "CREATECHANNEL";
                 break;
-            case INVITEUSERS:
-            case BANUSERS:
             case CHANGENICKNAME:
                 type = "CHANGENICKNAME";
                 String newNick =
@@ -151,14 +149,52 @@ public class AdminCommandRunnable implements Runnable {
                 break;
             case HISTORY:
                 type = "HISTORY";
-                UUID channelId =
+                UUID historyChannelId =
                     gson.fromJson(this.adminCommand.getCommandPayload(),
                         UUID.class);
                 ChannelHistory requestedHistory =
-                    this.getChannelHistory(channelId);
+                    this.getChannelHistory(historyChannelId);
 
                 payload = gson.toJson(requestedHistory, ChannelHistory.class);
                 break;
+            case JOIN:
+                UUID joinChannelId =
+                    gson.fromJson(this.adminCommand.getCommandPayload(),
+                        UUID.class);
+
+                AbstractChannel theChannel =
+                    (AbstractChannel) this.serverInstance.getOpenChannels()
+                        .get(joinChannelId);
+                boolean joinSuccess = theChannel.subscribeUser(this.sender);
+
+                if (theChannel.isSubscribed(this.sender) || joinSuccess) {
+                    type = "JOIN";
+                    payload = gson.toJson(theChannel, AbstractChannel.class);
+
+                } else {
+                    type = "ERROR";
+                    payload = "Join channel #" + joinChannelId + " failed";
+                }
+                break;
+            case QUIT:
+                UUID quitChannelId =
+                    gson.fromJson(this.adminCommand.getCommandPayload(),
+                        UUID.class);
+                theChannel =
+                    (AbstractChannel) this.serverInstance.getOpenChannels()
+                        .get(quitChannelId);
+                boolean quitSuccess = theChannel.unsubscribeUser(this.sender);
+                if (quitSuccess) {
+                    type = "QUIT";
+                    payload = gson.toJson(theChannel, Channel.class);
+
+                } else {
+                    type = "ERROR";
+                    payload = "Failed to quit Channel#" + quitChannelId;
+                }
+                break;
+            case INVITEUSERS:
+            case BANUSERS:
             default:
                 type = "ERROR";
                 payload = "NOT IMPLEMENTED";
