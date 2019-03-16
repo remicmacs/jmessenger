@@ -10,9 +10,9 @@ import us.hourgeon.jmessenger.client.ContactEvents;
 public class ContactCellView extends ListCell<User> {
 
     private ContactCellController controller;
-    private AbstractRoom channel;
+    private AbstractChannel channel;
 
-    ContactCellView(ContactEvents events, boolean hasContextMenu, AbstractRoom channel) {
+    ContactCellView(ContactEvents events, boolean hasContextMenu, AbstractChannel channel) {
         controller = new ContactCellController(events, hasContextMenu);
         this.channel = channel;
     }
@@ -34,7 +34,9 @@ public class ContactCellView extends ListCell<User> {
             controller.setUser(item);
             if (channel == null) {
                 controller.hideImage();
-            } else if (channel.isAdmin(item)) {
+            } else if (channel instanceof AbstractRoom
+                && ((AbstractRoom) channel).isAdmin(item))
+            {
                 controller.setImageUrl("star.png");
             }
             setGraphic(controller.getBox());

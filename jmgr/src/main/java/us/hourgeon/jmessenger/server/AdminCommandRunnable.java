@@ -305,13 +305,24 @@ public class AdminCommandRunnable implements Runnable {
             // Filter channels to find if DM Channel already exists
             Set<Channel> directMessageUsersGroups =
                 this.serverInstance.getOpenChannels().values().stream()
-                    .filter(channel -> channel instanceof DirectMessageConversation)
-                    .filter(channel ->
-                        (channel.getSubscribers().size() == ccr.getInvites().size())
-                    )
+                    .filter(channel -> {
+                        System.err.println(channel);
+                        return (channel instanceof DirectMessageConversation);
+                    })
+                    .filter(channel -> {
+                        System.err.println("DM : " + channel);
+                        return (channel.getSubscribers().size() == ccr.getInvites().size()+1);
+                    })
                     .filter(
-                        channel -> channel.getSubscribers()
-                            .equals(new TreeSet<>(ccr.getInvites()))
+                        channel -> {
+                            System.err.println("Candidates DM: " + channel);
+                            TreeSet<User> subscribers =
+                                new TreeSet<>(ccr.getInvites());
+                            subscribers.add(this.sender);
+                            boolean isActualDmMessage = channel.getSubscribers()
+                                    .equals(subscribers);
+                            return isActualDmMessage;
+                        }
                     ).collect(Collectors.toCollection(TreeSet::new)
                 );
 
@@ -321,12 +332,17 @@ public class AdminCommandRunnable implements Runnable {
                 serverChannel=
                     (DirectMessageConversation) directMessageUsersGroups.toArray()[0];
             } else {
+                // TODO: should be mapped to
+                // server
+                // users
+                ArrayList<User> dmusers = (ArrayList<User>) ccr.getInvites();
+                dmusers.add(this.sender);
                 serverChannel = new DirectMessageConversation(
                     UUID.randomUUID(),
-                    ccr.getInvites() // TODO: should be mapped to server users
+                    dmusers
                 );
 
-                this.sendInvites(ccr.getInvites());
+                this.sendInvites(dmusers);
             }
         }
 

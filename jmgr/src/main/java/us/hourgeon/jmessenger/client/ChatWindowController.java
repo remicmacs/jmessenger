@@ -263,7 +263,9 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
         participants.setAll(room.getSubscribers());
 
         // Reset the cell factories to adapt their views to the new data
-        contactsList.setCellFactory(new ContactCellFactory(this, isAdmin(), (AbstractRoom)room));
+        contactsList.setCellFactory(new ContactCellFactory(
+            this, isAdmin(), room)
+        );
         messagesList.setCellFactory(new MessageCellFactory(participants));
 
         request("HISTORY", room.getChannelId().toString());
@@ -478,6 +480,7 @@ public class ChatWindowController implements MessageEvents, ChannelEvents, Conta
                 ArrayList<Channel> channels = gson.fromJson(cmdPayload,
                     channelListToken);
 
+                channels.forEach(System.err::println);
                 rooms.clear();
                 conversations.clear();
 
