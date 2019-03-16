@@ -31,6 +31,38 @@ Notre projet est divisé en trois packages principaux, dont deux permettant de g
 
 Le troisième package, `Model`, comporte toutes les classes décrivant les modèles de données qui sont susceptibles d'être utilisés par les deux précédent packages.
 
+#### Package `Model`
+
+Dans ces classes on trouve deux catégories principales de données qui sont représentées :
+
+![Diagramme de classes du package Model](Model.png)
+
+##### Représentation des données
+
+Les classes représentant l'état interne de l'application, client comme serveur. Ces classes sont conçues pour être *thread-safe* et utilisent uniquement des collections concurrentes et des membres `final private`. Le modèle de données est donc essentiellement immutable en-dehors des collections concurrentes garantissant l'ajout et le retrait d'éléments de manière concurrente.
+
+* L'interface `Channel` et tout son arbre d'héritage, représenant les différents types de Conversation dans lesquelles un utilisateur peut se retrouver
+  * La logique commune entre tous les types de `Channel`s est implémentée dans `AbstractChannel`. `DirectMessageConversation` en est une implémentation pure
+    * Pour les `Channel`s dans lesquels il existe des notions de droits (les `Room`s) on retrouve une implémentation minimale de la gestion des droits dans `AbstractRoom`
+    * `PublicRoom` en est une implémentation pure
+    * `PrivateRoom` rajoute la gestion d'une liste d'accès.
+* La classe `User` représente les utilisateurs qui vont se retrouver dans les listes des `Channel`s
+* La classe `Message` représente les messages échangés par les utilisateurs dans les channels.
+
+##### Transmission des données
+
+Pour la communication des données entre le client et le serveur, nous utilisons la sérialisation et désérialisation au format JSON de classes créées spécifiquement pour la synchronisation des données.
+
+* Les données échangées sont représentées par :
+  * `ChannelHistory` qui permet de transporter l'historique du channel à un instant t
+  * `AdminCommand`, une classe fourre-tout permettant de soumettre des requêtes de gestion au serveur
+  * `CreateRequestChannel`, une classe de données permettant de transporter l'`AdminCommand` spécifique que requiert la création d'un nouveau channel
+* Des classes viennent s'ajouter à celles-ci pour faciliter la sérialisation et la déserialisation des objets vers le JSON :
+  * `ChannelAdapter` permettant de sérialiser et donc d'échanger des `AbstractChannel` afin de pouvoir bénéficier des relations d'héritage de cette partie du modèle
+  * `ZDTAdapter` pour la sérialisation et désérialisation des dates utilisées. Malgré le fait que le type `ZoneDateTime` fait partie de l'API Java native, elle n'est pas sérialisée automatiquement.
+
+#### Package `client`
+
 Le package `client` contient trois packages qui permettent la création et la gestion des `CellFactory` et des `ListCell` pour les `ListView` de l'interface principale (voir plus bas).
 
 ```mermaid
@@ -42,6 +74,9 @@ graph TD
 	B-->F[ContactCell]
 	B-->G[MessageCell]
 ```
+
+Le package `server` utilise massivement le modèle de données du package `Model` pour représenter l'état actuel du serveur.
+
 
 ## Fonctionnalités
 
