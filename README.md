@@ -41,4 +41,4 @@ java -jar build/libs/jmgr-1.0-SNAPSHOT-client.jar
 
 ## API documentation
 
-You can found the Javadoc-generated documentation [here](.jmgr/build/docs/javadoc/index.html).
+You can found the Javadoc-generated documentation [here](./jmgr/build/docs/javadoc/index.html).
