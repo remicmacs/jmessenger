@@ -1,0 +1,6 @@
+us.hourgeon.jmessenger.Model
+us.hourgeon.jmessenger.client
+us.hourgeon.jmessenger.client.ChannelCell
+us.hourgeon.jmessenger.client.ContactCell
+us.hourgeon.jmessenger.client.MessageCell
+us.hourgeon.jmessenger.server
